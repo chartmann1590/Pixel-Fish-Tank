@@ -28,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,7 +42,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.view.View
+import android.util.Log
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.foundation.layout.Box
+import kotlinx.coroutines.launch
+import com.charles.virtualpet.fishtank.share.TankScreenshotCapturer
+import com.charles.virtualpet.fishtank.share.ScreenshotFileStore
+import com.charles.virtualpet.fishtank.share.ShareIntentFactory
 import com.charles.virtualpet.fishtank.R
 import com.charles.virtualpet.fishtank.audio.BackgroundMusicManager
 import com.charles.virtualpet.fishtank.audio.SfxEvent
@@ -171,6 +185,13 @@ fun TankScreen(
     
     // Bubble pop throttle (max 10 plays per second)
     var lastBubblePopTime by remember { mutableStateOf(0L) }
+    
+    // Screenshot capture state
+    var isReadyForCapture by remember { mutableStateOf(false) }
+    var playableAreaView by remember { mutableStateOf<View?>(null) }
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
     
     // Spawn food when feed button is clicked
     fun spawnFood() {
@@ -351,41 +372,7 @@ fun TankScreen(
             )
         }
         
-        // Display placed decorations at ROOT LEVEL - NO BOUNDARIES, ANYWHERE ON SCREEN
-        placedDecorations.forEach { placed ->
-            val decoration = DecorationStore.getDecorationById(placed.decorationId)
-            if (decoration != null) {
-                val imageResId = when (decoration.drawableRes) {
-                    "decoration_plant" -> R.drawable.decoration_plant
-                    "decoration_rock" -> R.drawable.decoration_rock
-                    "decoration_toy" -> R.drawable.decoration_toy
-                    else -> R.drawable.decoration_plant
-                }
-                
-                val decorationSize = 240.dp
-                
-                // Use FULL SCREEN size - coordinates are relative to entire screen
-                val screenWidthPx = screenSize?.width?.toFloat() ?: with(density) { 400.dp.toPx() }
-                val screenHeightPx = screenSize?.height?.toFloat() ?: with(density) { 800.dp.toPx() }
-                val xPos = placed.x * screenWidthPx
-                val yPos = placed.y * screenHeightPx
-                
-                Image(
-                    painter = painterResource(id = imageResId),
-                    contentDescription = decoration.name,
-                    modifier = Modifier
-                        .size(decorationSize)
-                        .offset(
-                            x = with(density) { (xPos - decorationSize.toPx() / 2).toDp() },
-                            y = with(density) { (yPos - decorationSize.toPx() / 2).toDp() }
-                        )
-                        .clickable {
-                            // Remove decoration when tapped
-                            viewModel.removeDecoration(placed.id)
-                        }
-                )
-            }
-        }
+        // Decorations are now rendered inside TankPlayableArea
 
         // Expandable FAB for actions
         ExpandableFAB(
@@ -469,13 +456,84 @@ fun TankScreen(
                         )
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 )
-                androidx.compose.material3.IconButton(
-                    onClick = onNavigateToSettings
-                ) {
-                    Text(
-                        text = "⚙️",
-                        style = MaterialTheme.typography.titleLarge
-                    )
+                Row {
+                    // Share button
+                    androidx.compose.material3.IconButton(
+                        onClick = {
+                            coroutineScope.launch {
+                                if (!isReadyForCapture || playableAreaView == null || containerSize == null) {
+                                    snackbarHostState.showSnackbar("Tank not ready for screenshot")
+                                    return@launch
+                                }
+                                
+                                // Capture screenshot with tank background
+                                val bitmap = TankScreenshotCapturer.captureView(
+                                    context,
+                                    playableAreaView!!,
+                                    containerSize!!.width,
+                                    containerSize!!.height,
+                                    tankBackgroundRes
+                                )
+                                
+                                if (bitmap == null) {
+                                    snackbarHostState.showSnackbar("Failed to capture screenshot")
+                                    return@launch
+                                }
+                                
+                                // Save to file
+                                val screenshotFile = ScreenshotFileStore.saveScreenshot(context, bitmap)
+                                if (screenshotFile == null) {
+                                    snackbarHostState.showSnackbar("Failed to save screenshot")
+                                    return@launch
+                                }
+                                
+                                // Create share text with fish level
+                                // Get string resources before coroutine (can't use stringResource in coroutine)
+                                val shareTextRes = if (fishState.level > 1) {
+                                    R.string.share_tank_text_with_level
+                                } else {
+                                    R.string.share_tank_text
+                                }
+                                val shareText = if (fishState.level > 1) {
+                                    context.getString(shareTextRes, fishState.level)
+                                } else {
+                                    context.getString(shareTextRes)
+                                }
+                                
+                                // Create and launch share intent
+                                val shareIntent = ShareIntentFactory.createShareIntent(
+                                    context,
+                                    screenshotFile,
+                                    shareText
+                                )
+                                
+                                if (shareIntent != null) {
+                                    try {
+                                        context.startActivity(shareIntent)
+                                    } catch (e: Exception) {
+                                        Log.e("TankScreen", "Failed to launch share intent", e)
+                                        snackbarHostState.showSnackbar("No app available to share")
+                                    }
+                                } else {
+                                    snackbarHostState.showSnackbar("Failed to create share intent")
+                                }
+                            }
+                        },
+                        enabled = isReadyForCapture
+                    ) {
+                        Text(
+                            text = "📤",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    }
+                    androidx.compose.material3.IconButton(
+                        onClick = onNavigateToSettings
+                    ) {
+                        Text(
+                            text = "⚙️",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    }
                 }
             }
 
@@ -533,7 +591,6 @@ fun TankScreen(
                         containerScreenPosition = position
                     }
             ) {
-                
                 // Get current food positions for fish attraction
                 // Use a state to track food positions that updates continuously
                 var foodPositionsState by remember { mutableStateOf<List<Pair<Float, Float>>>(emptyList()) }
@@ -554,39 +611,47 @@ fun TankScreen(
                 
                 val foodPositions = foodPositionsState
                 
-                FishDisplay(
-                    mood = mood,
-                    onPositionUpdate = { x, y ->
-                        fishX = x
-                        fishY = y
+                // Tank playable area - isolated for screenshot capture
+                // Wrap in AndroidView to get a view reference for capture
+                AndroidView(
+                    factory = { ctx ->
+                        ComposeView(ctx).apply {
+                            playableAreaView = this
+                        }
                     },
-                    nearbyFood = foodPositions,
-                    onClick = { onFishClick() }
+                    update = { view ->
+                        (view as ComposeView).setContent {
+                            TankPlayableArea(
+                                placedDecorations = placedDecorations,
+                                mood = mood,
+                                activeFood = activeFood,
+                                coinRewards = coinRewards,
+                                containerSize = containerSize,
+                                screenSize = screenSize,
+                                containerScreenPosition = containerScreenPosition,
+                                fishX = fishX,
+                                fishY = fishY,
+                                foodPositions = foodPositions,
+                                onFishClick = { onFishClick() },
+                                onPositionUpdate = { x, y ->
+                                    fishX = x
+                                    fishY = y
+                                },
+                                onRemoveDecoration = { placedId ->
+                                    viewModel.removeDecoration(placedId)
+                                },
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                        // Mark as ready when view is laid out and has size
+                        view.post {
+                            if (view.width > 0 && view.height > 0 && containerSize != null) {
+                                isReadyForCapture = true
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxSize()
                 )
-                
-                // Display falling food
-                // Use actual container height, or fallback to 250.dp if not measured yet
-                val containerHeightDp = containerSize?.let { 
-                    with(density) { it.height.toDp() }
-                } ?: TankDimensions.TANK_HEIGHT
-                
-                activeFood.forEach { food ->
-                    FallingFood(
-                        food = food,
-                        containerHeight = containerHeightDp
-                    )
-                }
-                
-                // Display coin rewards
-                if (containerSize != null && coinRewards.isNotEmpty()) {
-                    coinRewards.forEach { reward ->
-                        CoinRewardDisplay(
-                            reward = reward,
-                            containerSize = containerSize!!,
-                            density = density
-                        )
-                    }
-                }
                 
                 // Show decoration selector when in placement mode
                 if (isPlacingDecoration && ownedDecorations.isNotEmpty()) {
@@ -682,6 +747,12 @@ fun TankScreen(
 
         }
 
+        // Snackbar host for error messages
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
+        
         // Bottom stats bar - positioned at absolute bottom, leaving space for FAB
         Row(
             modifier = Modifier
@@ -885,7 +956,7 @@ private fun getMoodColor(mood: FishMood): androidx.compose.ui.graphics.Color {
 }
 
 @Composable
-private fun FallingFood(
+internal fun FallingFood(
     food: FoodItem,
     containerHeight: androidx.compose.ui.unit.Dp
 ) {
@@ -931,7 +1002,7 @@ private fun FallingFood(
 }
 
 @Composable
-private fun CoinRewardDisplay(
+internal fun CoinRewardDisplay(
     reward: CoinReward,
     containerSize: IntSize,
     density: androidx.compose.ui.unit.Density

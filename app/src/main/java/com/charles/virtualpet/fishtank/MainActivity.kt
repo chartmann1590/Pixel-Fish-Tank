@@ -25,6 +25,7 @@ import com.charles.virtualpet.fishtank.ui.theme.PixelFishTankTheme
 import com.charles.virtualpet.fishtank.notifications.NotificationChannels
 import com.charles.virtualpet.fishtank.notifications.NotificationPrefs
 import com.charles.virtualpet.fishtank.notifications.PersistentNotificationManager
+import com.charles.virtualpet.fishtank.share.ScreenshotFileStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -62,6 +63,9 @@ class MainActivity : ComponentActivity() {
         
         // Initialize notification channels
         NotificationChannels.createChannels(this)
+        
+        // Clean up old screenshots on app start
+        ScreenshotFileStore.cleanupOldScreenshots(this)
         
         setContent {
             PixelFishTankTheme {
