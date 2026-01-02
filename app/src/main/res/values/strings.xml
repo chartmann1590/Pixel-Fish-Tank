@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Pixel Fish Tank</string>
+    <string name="tank_title">Fish Tank</string>
+    <string name="stat_hunger">Hunger</string>
+    <string name="stat_cleanliness">Cleanliness</string>
+    <string name="stat_happiness">Happiness</string>
+    <string name="button_feed">Feed</string>
+    <string name="button_clean">Clean</string>
+    <string name="label_level">Level</string>
+    <string name="label_xp">XP</string>
+    <string name="label_coins">Coins</string>
+    <string name="mood_happy">Happy</string>
+    <string name="mood_neutral">Neutral</string>
+    <string name="mood_hungry">Hungry</string>
+    <string name="mood_dirty">Dirty Tank</string>
+    <string name="mood_sad">Sad</string>
+</resources>
+

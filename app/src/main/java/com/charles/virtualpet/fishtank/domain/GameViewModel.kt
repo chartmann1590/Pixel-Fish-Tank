@@ -1,0 +1,314 @@
+package com.charles.virtualpet.fishtank.domain
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.charles.virtualpet.fishtank.data.GameStateRepository
+import com.charles.virtualpet.fishtank.domain.model.Decoration
+import com.charles.virtualpet.fishtank.domain.model.GameState
+import com.charles.virtualpet.fishtank.domain.model.InventoryItem
+import com.charles.virtualpet.fishtank.domain.model.ItemType
+import com.charles.virtualpet.fishtank.domain.model.PlacedDecoration
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+class GameViewModel(
+    private val repository: GameStateRepository
+) : ViewModel() {
+
+    private val _gameState = MutableStateFlow<GameState?>(null)
+    val gameState: StateFlow<GameState> = _gameState.asStateFlow()
+        .map { it ?: GameState() }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = GameState()
+        )
+
+    private var isInitialLoad = true
+
+    init {
+        // Load initial state from repository and apply decay
+        viewModelScope.launch {
+            repository.gameState.collect { state ->
+                if (isInitialLoad) {
+                    // Apply decay on first load only
+                    val decayedState = state.copy(
+                        fishState = StatDecayCalculator.calculateDecay(state.fishState),
+                        dailyTasks = DailyTaskManager.resetTasksIfNeeded(state.dailyTasks)
+                    )
+                    _gameState.value = decayedState
+                    // Save the decayed state to persist the updated timestamp
+                    saveState(decayedState)
+                    isInitialLoad = false
+                } else {
+                    // On subsequent emissions (from our own saves), just update state
+                    _gameState.value = state
+                }
+            }
+        }
+    }
+
+    private fun saveState(gameState: GameState) {
+        viewModelScope.launch {
+            repository.saveGameState(gameState)
+        }
+    }
+
+    fun feedFish() {
+        _gameState.update { currentState ->
+            val state = currentState ?: GameState()
+            // Apply decay before action
+            val decayedFish = StatDecayCalculator.calculateDecay(state.fishState)
+            val newHunger = (decayedFish.hunger + 30f).coerceAtMost(100f)
+            val newHappiness = (decayedFish.happiness + 5f).coerceAtMost(100f)
+            
+            // Complete feed task if not already completed and get rewards
+            val taskResult = completeTaskIfNotDone(state.dailyTasks, "feed_fish")
+            
+            // Apply rewards directly in this update block to avoid nested updates
+            val currentXP = state.fishState.xp
+            val currentLevel = state.fishState.level
+            val newXP = currentXP + taskResult.rewardXP
+            val newLevel = if (newXP >= currentLevel * 100) {
+                currentLevel + 1
+            } else {
+                currentLevel
+            }
+            
+            val updatedState = state.copy(
+                fishState = decayedFish.copy(
+                    hunger = newHunger,
+                    happiness = newHappiness,
+                    xp = newXP,
+                    level = newLevel,
+                    lastUpdatedEpoch = System.currentTimeMillis()
+                ),
+                economy = state.economy.copy(
+                    coins = state.economy.coins + taskResult.rewardCoins
+                ),
+                dailyTasks = taskResult.tasks
+            )
+            saveState(updatedState)
+            updatedState
+        }
+    }
+
+    fun cleanTank() {
+        _gameState.update { currentState ->
+            val state = currentState ?: GameState()
+            // Apply decay before action
+            val decayedFish = StatDecayCalculator.calculateDecay(state.fishState)
+            val newHappiness = (decayedFish.happiness + 10f).coerceAtMost(100f)
+            
+            // Complete clean task if not already completed and get rewards
+            val taskResult = completeTaskIfNotDone(state.dailyTasks, "clean_tank")
+            
+            // Apply rewards directly in this update block to avoid nested updates
+            val currentXP = state.fishState.xp
+            val currentLevel = state.fishState.level
+            val newXP = currentXP + taskResult.rewardXP
+            val newLevel = if (newXP >= currentLevel * 100) {
+                currentLevel + 1
+            } else {
+                currentLevel
+            }
+            
+            val updatedState = state.copy(
+                fishState = decayedFish.copy(
+                    cleanliness = 100f,
+                    happiness = newHappiness,
+                    xp = newXP,
+                    level = newLevel,
+                    lastUpdatedEpoch = System.currentTimeMillis()
+                ),
+                economy = state.economy.copy(
+                    coins = state.economy.coins + taskResult.rewardCoins
+                ),
+                dailyTasks = taskResult.tasks
+            )
+            saveState(updatedState)
+            updatedState
+        }
+    }
+
+    fun addCoins(amount: Int) {
+        _gameState.update { currentState ->
+            val state = currentState ?: GameState()
+            val updatedState = state.copy(
+                economy = state.economy.copy(
+                    coins = state.economy.coins + amount
+                )
+            )
+            saveState(updatedState)
+            updatedState
+        }
+    }
+
+    fun addXP(amount: Int) {
+        _gameState.update { currentState ->
+            val state = currentState ?: GameState()
+            val currentXP = state.fishState.xp
+            val currentLevel = state.fishState.level
+            val newXP = currentXP + amount
+            
+            // Level up every 100 XP
+            val newLevel = if (newXP >= currentLevel * 100) {
+                currentLevel + 1
+            } else {
+                currentLevel
+            }
+            
+            val updatedState = state.copy(
+                fishState = state.fishState.copy(
+                    xp = newXP,
+                    level = newLevel
+                )
+            )
+            saveState(updatedState)
+            updatedState
+        }
+    }
+
+    fun purchaseDecoration(decoration: Decoration) {
+        _gameState.update { currentState ->
+            val state = currentState ?: GameState()
+            val currentCoins = state.economy.coins
+            
+            if (currentCoins >= decoration.price) {
+                val newInventory = state.economy.inventoryItems + InventoryItem(
+                    id = decoration.id,
+                    name = decoration.name,
+                    type = ItemType.DECORATION
+                )
+                val updatedState = state.copy(
+                    economy = state.economy.copy(
+                        coins = currentCoins - decoration.price,
+                        inventoryItems = newInventory
+                    )
+                )
+                saveState(updatedState)
+                updatedState
+            } else {
+                state
+            }
+        }
+    }
+
+    fun placeDecoration(decorationId: String, x: Float, y: Float) {
+        _gameState.update { currentState ->
+            val state = currentState ?: GameState()
+            val newPlacedDecoration = PlacedDecoration(
+                decorationId = decorationId,
+                x = x.coerceIn(0f, 1f),
+                y = y.coerceIn(0f, 1f)
+            )
+            val updatedLayout = state.tankLayout.copy(
+                placedDecorations = state.tankLayout.placedDecorations + newPlacedDecoration
+            )
+            val updatedState = state.copy(tankLayout = updatedLayout)
+            saveState(updatedState)
+            updatedState
+        }
+    }
+
+    fun removeDecoration(decorationId: String) {
+        _gameState.update { currentState ->
+            val state = currentState ?: GameState()
+            val updatedLayout = state.tankLayout.copy(
+                placedDecorations = state.tankLayout.placedDecorations.filter { 
+                    it.decorationId != decorationId 
+                }
+            )
+            val updatedState = state.copy(tankLayout = updatedLayout)
+            saveState(updatedState)
+            updatedState
+        }
+    }
+
+    fun completeTask(taskId: String) {
+        _gameState.update { currentState ->
+            val state = currentState ?: GameState()
+            val taskResult = completeTaskIfNotDone(state.dailyTasks, taskId)
+            
+            // Apply rewards directly in this update block to avoid nested updates
+            val currentXP = state.fishState.xp
+            val currentLevel = state.fishState.level
+            val newXP = currentXP + taskResult.rewardXP
+            val newLevel = if (newXP >= currentLevel * 100) {
+                currentLevel + 1
+            } else {
+                currentLevel
+            }
+            
+            val updatedState = state.copy(
+                fishState = state.fishState.copy(
+                    xp = newXP,
+                    level = newLevel
+                ),
+                economy = state.economy.copy(
+                    coins = state.economy.coins + taskResult.rewardCoins
+                ),
+                dailyTasks = taskResult.tasks
+            )
+            saveState(updatedState)
+            updatedState
+        }
+    }
+
+    fun completeMinigameTask() {
+        completeTask("play_minigame")
+    }
+
+    fun completeDecorateTask() {
+        completeTask("decorate_tank")
+    }
+
+    // Data class to return task completion result with rewards
+    private data class TaskCompletionResult(
+        val tasks: com.charles.virtualpet.fishtank.domain.model.DailyTasksState,
+        val rewardCoins: Int,
+        val rewardXP: Int
+    )
+    
+    private fun completeTaskIfNotDone(
+        currentTasks: com.charles.virtualpet.fishtank.domain.model.DailyTasksState,
+        taskId: String
+    ): TaskCompletionResult {
+        val task = currentTasks.tasks.find { it.id == taskId }
+        if (task != null && !task.isCompleted) {
+            val updatedTasksState = DailyTaskManager.completeTask(taskId, currentTasks)
+            // Return rewards to be applied in the same update block (no nested updates)
+            return TaskCompletionResult(
+                tasks = updatedTasksState,
+                rewardCoins = task.rewardCoins,
+                rewardXP = task.rewardXP
+            )
+        }
+        return TaskCompletionResult(
+            tasks = currentTasks,
+            rewardCoins = 0,
+            rewardXP = 0
+        )
+    }
+
+    fun updateNotificationSettings(enabled: Boolean, reminderTimes: List<String>) {
+        _gameState.update { currentState ->
+            val state = currentState ?: GameState()
+            val updatedState = state.copy(
+                settings = state.settings.copy(
+                    notificationsEnabled = enabled,
+                    reminderTimes = reminderTimes
+                )
+            )
+            saveState(updatedState)
+            updatedState
+        }
+    }
+}
+
