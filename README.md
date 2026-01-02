@@ -10,6 +10,12 @@ Pixel Fish Tank is a Tamagotchi-style virtual pet game for Android. Take care of
 
 ### Core Gameplay
 - **Virtual Fish System**: Manage your fish's hunger, cleanliness, happiness, level, and XP
+- **Unlimited Leveling System**: Progressive XP requirements with unlimited levels - each level requires more XP than the last
+  - Level 1 → 2: 100 XP
+  - Level 2 → 3: 300 XP total (200 more)
+  - Level 3 → 4: 600 XP total (300 more)
+  - Level 4 → 5: 1,000 XP total (400 more)
+  - And so on, with no level cap!
 - **Tank Interaction**: Feed your fish and clean its tank to keep it healthy
 - **Mini-Games**: Three engaging mini-games (Timing Bar Challenge, Bubble Pop, Cleanup Rush) with difficulty levels
 - **Decoration System**: Customize your tank with various decorations
@@ -159,6 +165,7 @@ Check the issue tracker for known bugs and planned features.
 - ✅ Backup & restore functionality
 - ✅ Enhanced widget system with RemoteViews
 - ✅ High score tracking
+- ✅ Unlimited levels with progressive XP requirements
 
 ### v1.0
 - ✅ Core fish care mechanics

@@ -72,6 +72,38 @@ class GameViewModel(
         }
     }
 
+    /**
+     * Calculate the XP required to reach a given level.
+     * Uses a progressive formula: XP = 100 * level * (level + 1) / 2
+     * This ensures each level requires progressively more XP:
+     * - Level 1: 100 XP
+     * - Level 2: 300 XP (200 more)
+     * - Level 3: 600 XP (300 more)
+     * - Level 4: 1000 XP (400 more)
+     * - Level 5: 1500 XP (500 more)
+     * And so on, with unlimited levels.
+     */
+    private fun getXPRequiredForLevel(level: Int): Int {
+        return 100 * level * (level + 1) / 2
+    }
+
+    /**
+     * Calculate the new level based on current XP and level.
+     * Handles multiple level-ups if enough XP is gained.
+     * Supports unlimited levels.
+     */
+    private fun calculateNewLevel(currentLevel: Int, currentXP: Int, xpGained: Int): Int {
+        var newXP = currentXP + xpGained
+        var newLevel = currentLevel
+        
+        // Keep leveling up until we don't have enough XP for the next level
+        while (newXP >= getXPRequiredForLevel(newLevel + 1)) {
+            newLevel++
+        }
+        
+        return newLevel
+    }
+
     fun feedFish() {
         _gameState.update { currentState ->
             val state = currentState ?: GameState()
@@ -87,11 +119,7 @@ class GameViewModel(
             val currentXP = state.fishState.xp
             val currentLevel = state.fishState.level
             val newXP = currentXP + taskResult.rewardXP
-            val newLevel = if (newXP >= currentLevel * 100) {
-                currentLevel + 1
-            } else {
-                currentLevel
-            }
+            val newLevel = calculateNewLevel(currentLevel, currentXP, taskResult.rewardXP)
             
             val updatedState = state.copy(
                 fishState = decayedFish.copy(
@@ -129,11 +157,7 @@ class GameViewModel(
             val currentXP = state.fishState.xp
             val currentLevel = state.fishState.level
             val newXP = currentXP + taskResult.rewardXP
-            val newLevel = if (newXP >= currentLevel * 100) {
-                currentLevel + 1
-            } else {
-                currentLevel
-            }
+            val newLevel = calculateNewLevel(currentLevel, currentXP, taskResult.rewardXP)
             
             val updatedState = state.copy(
                 fishState = decayedFish.copy(
@@ -183,12 +207,8 @@ class GameViewModel(
             val currentLevel = state.fishState.level
             val newXP = currentXP + amount
             
-            // Level up every 100 XP
-            val newLevel = if (newXP >= currentLevel * 100) {
-                currentLevel + 1
-            } else {
-                currentLevel
-            }
+            // Calculate new level with progressive XP requirements
+            val newLevel = calculateNewLevel(currentLevel, currentXP, amount)
             
             val updatedState = state.copy(
                 fishState = state.fishState.copy(
@@ -328,11 +348,7 @@ class GameViewModel(
             val currentXP = state.fishState.xp
             val currentLevel = state.fishState.level
             val newXP = currentXP + taskResult.rewardXP
-            val newLevel = if (newXP >= currentLevel * 100) {
-                currentLevel + 1
-            } else {
-                currentLevel
-            }
+            val newLevel = calculateNewLevel(currentLevel, currentXP, taskResult.rewardXP)
             
             val updatedState = state.copy(
                 fishState = state.fishState.copy(
