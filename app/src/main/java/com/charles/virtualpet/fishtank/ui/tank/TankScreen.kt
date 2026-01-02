@@ -347,79 +347,8 @@ fun TankScreen(
             contentScale = ContentScale.Crop
         )
         
-        // Full screen tap detection for decoration placement
-        if (isPlacingDecoration && selectedDecorationId != null && screenSize != null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .pointerInput(screenSize, selectedDecorationId, economy.inventoryItems) {
-                        detectTapGestures { tapOffset ->
-                            // Double-check quantity before placing
-                            val inventoryItem = economy.inventoryItems.find { it.id == selectedDecorationId }
-                            if (inventoryItem != null && inventoryItem.quantity > 0) {
-                                // Use FULL SCREEN size for coordinates
-                                val x = (tapOffset.x / screenSize!!.width.toFloat()).coerceIn(0f, 1f)
-                                val y = (tapOffset.y / screenSize!!.height.toFloat()).coerceIn(0f, 1f)
-                                viewModel.placeDecoration(selectedDecorationId!!, x, y)
-                                if (placedDecorations.isEmpty()) {
-                                    viewModel.completeDecorateTask()
-                                }
-                            }
-                            selectedDecorationId = null
-                            isPlacingDecoration = false
-                        }
-                    }
-            )
-        }
-        
         // Decorations are now rendered inside TankPlayableArea
 
-        // Expandable FAB for actions
-        ExpandableFAB(
-            actions = listOf(
-                FABAction(
-                    label = "feed", // Use ID for tour matching
-                    iconRes = R.drawable.ic_feed,
-                    onClick = { spawnFood() }
-                ),
-                FABAction(
-                    label = "clean", // Use ID for tour matching
-                    iconRes = R.drawable.ic_clean,
-                    onClick = { 
-                        viewModel.cleanTank()
-                        cleanUneatenFood() // Remove uneaten food at bottom
-                    }
-                ),
-                FABAction(
-                    label = "minigame", // Use ID for tour matching
-                    iconRes = null,
-                    onClick = onNavigateToMiniGame
-                ),
-                FABAction(
-                    label = "Store",
-                    iconRes = null,
-                    onClick = onNavigateToStore
-                ),
-                FABAction(
-                    label = "decorate", // Use ID for tour matching
-                    iconRes = null,
-                    onClick = {
-                        if (ownedDecorations.isNotEmpty()) {
-                            isPlacingDecoration = true
-                            selectedDecorationId = ownedDecorations.first().id
-                        } else {
-                            onNavigateToStore()
-                        }
-                    }
-                )
-            ),
-            onButtonBoundsCaptured = { buttonId, bounds ->
-                buttonBounds = buttonBounds + (buttonId to bounds)
-            },
-            forceExpanded = showGuidedTour, // Expand FAB when tour is active
-            modifier = Modifier.fillMaxSize()
-        )
-        
         // Guided tour overlay
         TankGuidedTour(
             showTour = showGuidedTour && !isPlacingDecoration,
@@ -808,126 +737,178 @@ fun TankScreen(
         }
         
         // Render bubbles with click detection - ABSOLUTE LAST at root level
-        if (containerSize != null && activeBubbles.isNotEmpty() && !isPlacingDecoration) {
-            // Draw bubbles in container (inside the container Box)
+        if (containerSize != null && activeBubbles.isNotEmpty() && !isPlacingDecoration && containerScreenPosition != null) {
+            // Draw bubbles in container (positioned to only cover container area, not full screen)
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .offset(
+                        x = with(density) { containerScreenPosition!!.x.toDp() },
+                        y = with(density) { containerScreenPosition!!.y.toDp() }
+                    )
+                    .size(
+                        width = with(density) { containerSize!!.width.toDp() },
+                        height = with(density) { containerSize!!.height.toDp() }
+                    )
                     .pointerInput(Unit) {
                         detectTapGestures { tapOffset ->
-                            // Convert screen tap to container-relative coordinates
-                            if (containerScreenPosition != null) {
-                                val containerPos = containerScreenPosition!!
-                                val containerRelativeX = tapOffset.x - containerPos.x
-                                val containerRelativeY = tapOffset.y - containerPos.y
-                                
-                                // Only process if tap is within container bounds
-                                if (containerRelativeX >= 0 && containerRelativeX < containerSize!!.width &&
-                                    containerRelativeY >= 0 && containerRelativeY < containerSize!!.height) {
-                                    
-                                    val containerWidth = containerSize!!.width.toFloat()
-                                    val containerHeight = containerSize!!.height.toFloat()
-                                    
-                                    // Check if tap hit any bubble
-                                    val bubblesToRemove = mutableListOf<String>()
-                                    
-                                    activeBubbles.forEach { bubble ->
-                                        val bubbleX = bubble.x * containerWidth
-                                        val bubbleY = bubble.y * containerHeight
-                                        
-                                        val distance = sqrt(
-                                            (containerRelativeX - bubbleX).pow(2) + (containerRelativeY - bubbleY).pow(2)
-                                        )
-                                        
-                                        if (distance <= bubble.radius) {
-                                            // Bubble clicked! Give coins and show reward
-                                            viewModel.addCoins(bubble.coinValue)
-                                            
-                                            // Play bubble pop sound with throttle (max 10/second)
-                                            val currentTime = System.currentTimeMillis()
-                                            if (currentTime - lastBubblePopTime >= 100) { // 100ms = 10 per second
-                                                sfxManager?.play(SfxEvent.BUBBLE_POP)
-                                                lastBubblePopTime = currentTime
-                                            }
-                                            
-                                            // Create coin reward animation at bubble position
-                                            val rewardId = UUID.randomUUID().toString()
-                                            coinRewards.add(
-                                                CoinReward(
-                                                    id = rewardId,
-                                                    x = bubble.x,
-                                                    y = bubble.y,
-                                                    amount = bubble.coinValue
-                                                )
-                                            )
-                                            
-                                            bubblesToRemove.add(bubble.id)
-                                        }
-                                    }
-                                    
-                                    // Remove clicked bubbles
-                                    if (bubblesToRemove.isNotEmpty()) {
-                                        activeBubbles = activeBubbles.filter { bubble ->
-                                            !bubblesToRemove.contains(bubble.id)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-            ) {
-                // Draw bubbles on a Canvas positioned at container location
-                if (containerScreenPosition != null) {
-                    Box(
-                        modifier = Modifier
-                            .offset(
-                                x = with(density) { containerScreenPosition!!.x.toDp() },
-                                y = with(density) { containerScreenPosition!!.y.toDp() }
-                            )
-                            .size(
-                                width = with(density) { containerSize!!.width.toDp() },
-                                height = with(density) { containerSize!!.height.toDp() }
-                            )
-                    ) {
-                        Canvas(modifier = Modifier.fillMaxSize()) {
-                            val containerWidth = size.width
-                            val containerHeight = size.height
+                            // tapOffset is now relative to the container, not the full screen
+                            val containerWidth = containerSize!!.width.toFloat()
+                            val containerHeight = containerSize!!.height.toFloat()
+                            
+                            // Check if tap hit any bubble
+                            val bubblesToRemove = mutableListOf<String>()
                             
                             activeBubbles.forEach { bubble ->
                                 val bubbleX = bubble.x * containerWidth
                                 val bubbleY = bubble.y * containerHeight
                                 
-                                // Draw bubble with gradient effect (same as mini-game)
-                                drawCircle(
-                                    brush = Brush.radialGradient(
-                                        colors = listOf(
-                                            Color(0xFFE1F5FE).copy(alpha = 0.9f),
-                                            Color(0xFF64B5F6).copy(alpha = 0.7f)
-                                        ),
-                                        center = Offset(bubbleX, bubbleY),
-                                        radius = bubble.radius
-                                    ),
-                                    radius = bubble.radius,
-                                    center = Offset(bubbleX, bubbleY)
+                                val distance = sqrt(
+                                    (tapOffset.x - bubbleX).pow(2) + (tapOffset.y - bubbleY).pow(2)
                                 )
-                                // Draw outline
-                                drawCircle(
-                                    color = Color(0xFF1976D2),
-                                    radius = bubble.radius,
-                                    center = Offset(bubbleX, bubbleY),
-                                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2f)
-                                )
-                                // Draw highlight
-                                drawCircle(
-                                    color = Color.White.copy(alpha = 0.6f),
-                                    radius = bubble.radius * 0.4f,
-                                    center = Offset(bubbleX - bubble.radius * 0.3f, bubbleY - bubble.radius * 0.3f)
-                                )
+                                
+                                if (distance <= bubble.radius) {
+                                    // Bubble clicked! Give coins and show reward
+                                    viewModel.addCoins(bubble.coinValue)
+                                    
+                                    // Play bubble pop sound with throttle (max 10/second)
+                                    val currentTime = System.currentTimeMillis()
+                                    if (currentTime - lastBubblePopTime >= 100) { // 100ms = 10 per second
+                                        sfxManager?.play(SfxEvent.BUBBLE_POP)
+                                        lastBubblePopTime = currentTime
+                                    }
+                                    
+                                    // Create coin reward animation at bubble position
+                                    val rewardId = UUID.randomUUID().toString()
+                                    coinRewards.add(
+                                        CoinReward(
+                                            id = rewardId,
+                                            x = bubble.x,
+                                            y = bubble.y,
+                                            amount = bubble.coinValue
+                                        )
+                                    )
+                                    
+                                    bubblesToRemove.add(bubble.id)
+                                }
+                            }
+                            
+                            // Remove clicked bubbles
+                            if (bubblesToRemove.isNotEmpty()) {
+                                activeBubbles = activeBubbles.filter { bubble ->
+                                    !bubblesToRemove.contains(bubble.id)
+                                }
                             }
                         }
                     }
+            ) {
+                // Draw bubbles on a Canvas (already positioned by parent Box)
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    val containerWidth = size.width
+                    val containerHeight = size.height
+                    
+                    activeBubbles.forEach { bubble ->
+                        val bubbleX = bubble.x * containerWidth
+                        val bubbleY = bubble.y * containerHeight
+                        
+                        // Draw bubble with gradient effect (same as mini-game)
+                        drawCircle(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    Color(0xFFE1F5FE).copy(alpha = 0.9f),
+                                    Color(0xFF64B5F6).copy(alpha = 0.7f)
+                                ),
+                                center = Offset(bubbleX, bubbleY),
+                                radius = bubble.radius
+                            ),
+                            radius = bubble.radius,
+                            center = Offset(bubbleX, bubbleY)
+                        )
+                        // Draw outline
+                        drawCircle(
+                            color = Color(0xFF1976D2),
+                            radius = bubble.radius,
+                            center = Offset(bubbleX, bubbleY),
+                            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2f)
+                        )
+                        // Draw highlight
+                        drawCircle(
+                            color = Color.White.copy(alpha = 0.6f),
+                            radius = bubble.radius * 0.4f,
+                            center = Offset(bubbleX - bubble.radius * 0.3f, bubbleY - bubble.radius * 0.3f)
+                        )
+                    }
                 }
             }
+        }
+        
+        // Expandable FAB for actions - rendered AFTER bubble overlay so it's on top and clickable
+        ExpandableFAB(
+            actions = listOf(
+                FABAction(
+                    label = "feed", // Use ID for tour matching
+                    iconRes = R.drawable.ic_feed,
+                    onClick = { spawnFood() }
+                ),
+                FABAction(
+                    label = "clean", // Use ID for tour matching
+                    iconRes = R.drawable.ic_clean,
+                    onClick = { 
+                        viewModel.cleanTank()
+                        cleanUneatenFood() // Remove uneaten food at bottom
+                    }
+                ),
+                FABAction(
+                    label = "minigame", // Use ID for tour matching
+                    iconRes = null,
+                    onClick = onNavigateToMiniGame
+                ),
+                FABAction(
+                    label = "Store",
+                    iconRes = null,
+                    onClick = onNavigateToStore
+                ),
+                FABAction(
+                    label = "decorate", // Use ID for tour matching
+                    iconRes = null,
+                    onClick = {
+                        if (ownedDecorations.isNotEmpty()) {
+                            onNavigateToPlacement()
+                        } else {
+                            onNavigateToStore()
+                        }
+                    }
+                )
+            ),
+            onButtonBoundsCaptured = { buttonId, bounds ->
+                buttonBounds = buttonBounds + (buttonId to bounds)
+            },
+            forceExpanded = showGuidedTour, // Expand FAB when tour is active
+            modifier = Modifier.fillMaxSize()
+        )
+        
+        // Full screen tap detection for decoration placement - rendered AFTER FAB so it's on top
+        if (isPlacingDecoration && selectedDecorationId != null && screenSize != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(screenSize, selectedDecorationId, economy.inventoryItems) {
+                        detectTapGestures { tapOffset ->
+                            // Double-check quantity before placing
+                            val inventoryItem = economy.inventoryItems.find { it.id == selectedDecorationId }
+                            if (inventoryItem != null && inventoryItem.quantity > 0) {
+                                // Use FULL SCREEN size for coordinates
+                                val x = (tapOffset.x / screenSize!!.width.toFloat()).coerceIn(0f, 1f)
+                                val y = (tapOffset.y / screenSize!!.height.toFloat()).coerceIn(0f, 1f)
+                                viewModel.placeDecoration(selectedDecorationId!!, x, y)
+                                if (placedDecorations.isEmpty()) {
+                                    viewModel.completeDecorateTask()
+                                }
+                            }
+                            selectedDecorationId = null
+                            isPlacingDecoration = false
+                        }
+                    }
+            )
         }
         
     }

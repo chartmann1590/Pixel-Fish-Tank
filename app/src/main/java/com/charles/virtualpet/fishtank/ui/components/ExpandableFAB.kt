@@ -51,20 +51,31 @@ fun ExpandableFAB(
     Box(
         modifier = modifier.fillMaxSize()
     ) {
-        // Backdrop overlay when expanded
+        // Backdrop overlay when expanded - only intercepts clicks when visible
         val backdropAlpha by animateFloatAsState(
             targetValue = if (isExpanded) 0.3f else 0f,
             animationSpec = tween(durationMillis = 300),
             label = "backdrop_alpha"
         )
         
-        if (isExpanded || backdropAlpha > 0f) {
+        // Backdrop only intercepts clicks when actually expanded (not just animating)
+        if (isExpanded) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .alpha(backdropAlpha)
                     .background(Color.Black)
-                    .clickable { expanded = false }
+                    .clickable { 
+                        expanded = false 
+                    }
+            )
+        } else if (backdropAlpha > 0f) {
+            // During animation out, show backdrop but don't intercept clicks
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .alpha(backdropAlpha)
+                    .background(Color.Black)
             )
         }
         
@@ -154,7 +165,9 @@ fun ExpandableFAB(
         
         // Main FAB button
         FloatingActionButton(
-            onClick = { expanded = !expanded },
+            onClick = { 
+                expanded = !expanded 
+            },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(bottom = 16.dp, end = 16.dp),

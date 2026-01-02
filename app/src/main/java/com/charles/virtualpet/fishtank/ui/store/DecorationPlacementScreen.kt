@@ -38,6 +38,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.draw.alpha
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.charles.virtualpet.fishtank.R
 import com.charles.virtualpet.fishtank.data.DecorationStore
@@ -98,34 +99,97 @@ fun DecorationPlacementScreen(
                             else -> R.drawable.decoration_plant
                         }
                         
-                        Card(
-                            modifier = Modifier
-                                .size(80.dp)
-                                .clickable {
-                                    selectedDecorationId = decoration.id
-                                },
-                            shape = CircleShape
+                        val hasQuantity = item.quantity > 0
+                        val isSelected = selectedDecorationId == decoration.id
+                        
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.width(80.dp)
                         ) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Image(
-                                    painter = painterResource(id = imageResId),
-                                    contentDescription = decoration.name,
-                                    modifier = Modifier.size(60.dp)
+                            Card(
+                                modifier = Modifier
+                                    .size(80.dp)
+                                    .then(
+                                        if (hasQuantity) {
+                                            Modifier.clickable {
+                                                selectedDecorationId = decoration.id
+                                            }
+                                        } else {
+                                            Modifier
+                                        }
+                                    ),
+                                shape = CircleShape,
+                                colors = androidx.compose.material3.CardDefaults.cardColors(
+                                    containerColor = if (hasQuantity) {
+                                        MaterialTheme.colorScheme.surface
+                                    } else {
+                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                    }
                                 )
-                                if (selectedDecorationId == decoration.id) {
-                                    Box(
+                            ) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = imageResId),
+                                        contentDescription = decoration.name,
                                         modifier = Modifier
-                                            .fillMaxSize()
-                                            .background(
-                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                                                shape = CircleShape
+                                            .size(60.dp)
+                                            .then(
+                                                if (!hasQuantity) {
+                                                    Modifier.alpha(0.4f)
+                                                } else {
+                                                    Modifier
+                                                }
                                             )
                                     )
+                                    if (isSelected && hasQuantity) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .background(
+                                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                                                    shape = CircleShape
+                                                )
+                                        )
+                                    }
+                                    // Inventory count badge in top-right corner
+                                    Box(
+                                        modifier = Modifier
+                                            .align(Alignment.TopEnd)
+                                            .padding(4.dp)
+                                            .background(
+                                                if (hasQuantity) {
+                                                    MaterialTheme.colorScheme.primary
+                                                } else {
+                                                    MaterialTheme.colorScheme.error
+                                                },
+                                                shape = CircleShape
+                                            )
+                                            .size(24.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = "${item.quantity}",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onPrimary,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
                                 }
                             }
+                            // Show quantity below the decoration
+                            Text(
+                                text = "x${item.quantity}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (hasQuantity) {
+                                    MaterialTheme.colorScheme.onSurface
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                },
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
                         }
                     }
                 }
