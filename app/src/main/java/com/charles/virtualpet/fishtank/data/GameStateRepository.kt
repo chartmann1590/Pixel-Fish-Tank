@@ -43,6 +43,9 @@ class GameStateRepository(private val context: Context) {
         val BUBBLE_POP_HIGH_SCORE = intPreferencesKey("bubble_pop_high_score")
         val TIMING_BAR_HIGH_SCORE = intPreferencesKey("timing_bar_high_score")
         val CLEANUP_RUSH_HIGH_SCORE = intPreferencesKey("cleanup_rush_high_score")
+        val FOOD_DROP_HIGH_SCORE = intPreferencesKey("food_drop_high_score")
+        val MEMORY_SHELLS_HIGH_SCORE = intPreferencesKey("memory_shells_high_score")
+        val FISH_FOLLOW_HIGH_SCORE = intPreferencesKey("fish_follow_high_score")
         val TANK_LAYOUT = stringPreferencesKey("tank_layout")
         val DAILY_TASKS = stringPreferencesKey("daily_tasks")
         val LAST_RESET_DATE = stringPreferencesKey("last_reset_date")
@@ -51,6 +54,8 @@ class GameStateRepository(private val context: Context) {
         val LAST_COMPLETED_DATE = stringPreferencesKey("last_completed_date")
         val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
         val REMINDER_TIMES = stringPreferencesKey("reminder_times")
+        val SFX_ENABLED = booleanPreferencesKey("sfx_enabled")
+        val BG_MUSIC_ENABLED = booleanPreferencesKey("bg_music_enabled")
         val LAST_BACKUP_EPOCH = longPreferencesKey("last_backup_epoch")
     }
 
@@ -96,6 +101,8 @@ class GameStateRepository(private val context: Context) {
             // Save settings
             preferences[Keys.NOTIFICATIONS_ENABLED] = gameState.settings.notificationsEnabled
             preferences[Keys.REMINDER_TIMES] = serializeReminderTimes(gameState.settings.reminderTimes)
+            preferences[Keys.SFX_ENABLED] = gameState.settings.sfxEnabled
+            preferences[Keys.BG_MUSIC_ENABLED] = gameState.settings.bgMusicEnabled
         }
     }
 
@@ -121,6 +128,12 @@ class GameStateRepository(private val context: Context) {
                     preferences[Keys.TIMING_BAR_HIGH_SCORE] ?: 0
                 com.charles.virtualpet.fishtank.ui.minigame.MiniGameType.CLEANUP_RUSH -> 
                     preferences[Keys.CLEANUP_RUSH_HIGH_SCORE] ?: 0
+                com.charles.virtualpet.fishtank.ui.minigame.MiniGameType.FOOD_DROP -> 
+                    preferences[Keys.FOOD_DROP_HIGH_SCORE] ?: 0
+                com.charles.virtualpet.fishtank.ui.minigame.MiniGameType.MEMORY_SHELLS -> 
+                    preferences[Keys.MEMORY_SHELLS_HIGH_SCORE] ?: 0
+                com.charles.virtualpet.fishtank.ui.minigame.MiniGameType.FISH_FOLLOW -> 
+                    preferences[Keys.FISH_FOLLOW_HIGH_SCORE] ?: 0
             }
         }
     }
@@ -131,6 +144,9 @@ class GameStateRepository(private val context: Context) {
                 com.charles.virtualpet.fishtank.ui.minigame.MiniGameType.BUBBLE_POP -> Keys.BUBBLE_POP_HIGH_SCORE
                 com.charles.virtualpet.fishtank.ui.minigame.MiniGameType.TIMING_BAR -> Keys.TIMING_BAR_HIGH_SCORE
                 com.charles.virtualpet.fishtank.ui.minigame.MiniGameType.CLEANUP_RUSH -> Keys.CLEANUP_RUSH_HIGH_SCORE
+                com.charles.virtualpet.fishtank.ui.minigame.MiniGameType.FOOD_DROP -> Keys.FOOD_DROP_HIGH_SCORE
+                com.charles.virtualpet.fishtank.ui.minigame.MiniGameType.MEMORY_SHELLS -> Keys.MEMORY_SHELLS_HIGH_SCORE
+                com.charles.virtualpet.fishtank.ui.minigame.MiniGameType.FISH_FOLLOW -> Keys.FISH_FOLLOW_HIGH_SCORE
             }
             val currentHigh = preferences[key] ?: 0
             if (score > currentHigh) {
@@ -270,7 +286,9 @@ class GameStateRepository(private val context: Context) {
     private fun parseSettings(preferences: Preferences): Settings {
         return Settings(
             notificationsEnabled = preferences[Keys.NOTIFICATIONS_ENABLED] ?: false,
-            reminderTimes = parseReminderTimes(preferences[Keys.REMINDER_TIMES])
+            reminderTimes = parseReminderTimes(preferences[Keys.REMINDER_TIMES]),
+            sfxEnabled = preferences[Keys.SFX_ENABLED] ?: true,
+            bgMusicEnabled = preferences[Keys.BG_MUSIC_ENABLED] ?: true
         )
     }
 

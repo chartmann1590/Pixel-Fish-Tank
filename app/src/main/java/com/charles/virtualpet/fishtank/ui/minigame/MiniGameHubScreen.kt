@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -82,56 +84,25 @@ fun MiniGameHubScreen(
             
             Spacer(modifier = Modifier.height(24.dp))
             
-            // Bubble Pop Card
-            GameCard(
-                title = "🫧 Bubble Pop",
-                description = "Tap bubbles as they float up!",
-                emoji = "🫧",
-                highScore = highScoreStore.get(MiniGameType.BUBBLE_POP),
-                gradientColors = listOf(
-                    Color(0xFF64B5F6),
-                    Color(0xFF42A5F5),
-                    Color(0xFF1E88E5)
-                ),
-                onClick = { onStartGame(MiniGameType.BUBBLE_POP) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-            )
-            
-            // Timing Bar Card
-            GameCard(
-                title = "⏱️ Timing Bar",
-                description = "Stop the marker at the perfect moment!",
-                emoji = "⏱️",
-                highScore = highScoreStore.get(MiniGameType.TIMING_BAR),
-                gradientColors = listOf(
-                    Color(0xFFFFB74D),
-                    Color(0xFFFFA726),
-                    Color(0xFFFF9800)
-                ),
-                onClick = { onStartGame(MiniGameType.TIMING_BAR) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-            )
-            
-            // Cleanup Rush Card
-            GameCard(
-                title = "🧹 Cleanup Rush",
-                description = "Tap algae spots to clean the tank!",
-                emoji = "🧹",
-                highScore = highScoreStore.get(MiniGameType.CLEANUP_RUSH),
-                gradientColors = listOf(
-                    Color(0xFF66BB6A),
-                    Color(0xFF4CAF50),
-                    Color(0xFF388E3C)
-                ),
-                onClick = { onStartGame(MiniGameType.CLEANUP_RUSH) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-            )
+            // Render games from registry
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
+            ) {
+                items(MiniGameRegistry.allGames) { gameDef ->
+                    GameCard(
+                        title = gameDef.title,
+                        description = gameDef.description,
+                        emoji = gameDef.emoji,
+                        highScore = highScoreStore.get(gameDef.type),
+                        gradientColors = gameDef.gradientColors,
+                        onClick = { onStartGame(gameDef.type) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                    )
+                }
+            }
         }
     }
 }

@@ -40,8 +40,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.DisposableEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.charles.virtualpet.fishtank.R
+import com.charles.virtualpet.fishtank.audio.BackgroundMusicManager
+import com.charles.virtualpet.fishtank.audio.SfxEvent
+import com.charles.virtualpet.fishtank.audio.SfxManager
 import com.charles.virtualpet.fishtank.domain.GameViewModel
 import com.charles.virtualpet.fishtank.data.DecorationStore
 import com.charles.virtualpet.fishtank.domain.MoodCalculator
@@ -94,6 +98,8 @@ data class CoinReward(
 @Composable
 fun TankScreen(
     viewModel: GameViewModel,
+    sfxManager: SfxManager?,
+    bgMusicManager: BackgroundMusicManager?,
     onNavigateToMiniGame: () -> Unit = {},
     onNavigateToStore: () -> Unit = {},
     onNavigateToPlacement: () -> Unit = {},
@@ -101,6 +107,14 @@ fun TankScreen(
     modifier: Modifier = Modifier
 ) {
     val gameState by viewModel.gameState.collectAsStateWithLifecycle()
+    
+    // Start background music when screen appears, stop when leaving
+    DisposableEffect(Unit) {
+        bgMusicManager?.start()
+        onDispose {
+            bgMusicManager?.stop()
+        }
+    }
     val fishState = gameState.fishState
     val economy = gameState.economy
     val placedDecorations = gameState.tankLayout.placedDecorations
@@ -109,6 +123,26 @@ fun TankScreen(
 
     // Calculate fish mood
     val mood = MoodCalculator.calculateMood(fishState)
+    
+    // Track previous level and mood for change detection
+    var previousLevel by remember { mutableStateOf(fishState.level) }
+    var previousMood by remember { mutableStateOf(mood) }
+    
+    // Play happy chime on level-up
+    LaunchedEffect(fishState.level) {
+        if (fishState.level > previousLevel) {
+            sfxManager?.play(SfxEvent.HAPPY_CHIME)
+            previousLevel = fishState.level
+        }
+    }
+    
+    // Play happy chime when mood transitions to HAPPY
+    LaunchedEffect(mood) {
+        if (mood == FishMood.HAPPY && previousMood != FishMood.HAPPY) {
+            sfxManager?.play(SfxEvent.HAPPY_CHIME)
+        }
+        previousMood = mood
+    }
     
     // Decoration placement mode
     var isPlacingDecoration by remember { mutableStateOf(false) }
@@ -127,11 +161,16 @@ fun TankScreen(
     val coinRewards = remember { mutableStateListOf<CoinReward>() }
     var containerSize by remember { mutableStateOf<IntSize?>(null) }
     
+    // Bubble pop throttle (max 10 plays per second)
+    var lastBubblePopTime by remember { mutableStateOf(0L) }
+    
     // Spawn food when feed button is clicked
     fun spawnFood() {
         val foodId = UUID.randomUUID().toString()
         val randomX = kotlin.random.Random.nextFloat() * 0.6f + 0.2f // Spawn food in middle 60% of tank width
         activeFood.add(FoodItem(id = foodId, x = randomX, y = 0f))
+        // Play feed sound
+        sfxManager?.play(SfxEvent.FEED_NIBBLE)
     }
     
     // Check collisions and mark food that reaches bottom
@@ -710,6 +749,13 @@ fun TankScreen(
                                         if (distance <= bubble.radius) {
                                             // Bubble clicked! Give coins and show reward
                                             viewModel.addCoins(bubble.coinValue)
+                                            
+                                            // Play bubble pop sound with throttle (max 10/second)
+                                            val currentTime = System.currentTimeMillis()
+                                            if (currentTime - lastBubblePopTime >= 100) { // 100ms = 10 per second
+                                                sfxManager?.play(SfxEvent.BUBBLE_POP)
+                                                lastBubblePopTime = currentTime
+                                            }
                                             
                                             // Create coin reward animation at bubble position
                                             val rewardId = UUID.randomUUID().toString()

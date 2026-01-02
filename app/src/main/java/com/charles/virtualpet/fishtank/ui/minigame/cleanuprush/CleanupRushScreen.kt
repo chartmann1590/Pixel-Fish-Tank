@@ -41,6 +41,8 @@ import com.charles.virtualpet.fishtank.ui.minigame.DifficultySelector
 import com.charles.virtualpet.fishtank.ui.minigame.MiniGameDifficulty
 import com.charles.virtualpet.fishtank.ui.minigame.MiniGameEndScreen
 import com.charles.virtualpet.fishtank.ui.minigame.MiniGameResult
+import com.charles.virtualpet.fishtank.audio.SfxEvent
+import com.charles.virtualpet.fishtank.audio.SfxManager
 import com.charles.virtualpet.fishtank.ui.minigame.MiniGameType
 import com.charles.virtualpet.fishtank.ui.minigame.common.Rewards
 import com.charles.virtualpet.fishtank.ui.minigame.common.useGameTimer
@@ -65,6 +67,7 @@ enum class CleanupRushGameState {
 @Composable
 fun CleanupRushScreen(
     highScoreStore: com.charles.virtualpet.fishtank.ui.minigame.HighScoreStore,
+    sfxManager: SfxManager?,
     onFinish: (MiniGameResult) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
@@ -309,6 +312,8 @@ fun CleanupRushScreen(
                                             if (distance <= spot.size) {
                                                 // Spot cleaned!
                                                 score++
+                                                // Play clean splash sound
+                                                sfxManager?.play(SfxEvent.CLEAN_SPLASH)
                                                 false // Remove spot
                                             } else {
                                                 true // Keep spot

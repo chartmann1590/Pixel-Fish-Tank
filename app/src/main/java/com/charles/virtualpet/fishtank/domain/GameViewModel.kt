@@ -387,6 +387,32 @@ class GameViewModel(
             updatedState
         }
     }
+
+    fun updateSfxSettings(enabled: Boolean) {
+        _gameState.update { currentState ->
+            val state = currentState ?: GameState()
+            val updatedState = state.copy(
+                settings = state.settings.copy(
+                    sfxEnabled = enabled
+                )
+            )
+            saveState(updatedState)
+            updatedState
+        }
+    }
+
+    fun updateBgMusicSettings(enabled: Boolean) {
+        _gameState.update { currentState ->
+            val state = currentState ?: GameState()
+            val updatedState = state.copy(
+                settings = state.settings.copy(
+                    bgMusicEnabled = enabled
+                )
+            )
+            saveState(updatedState)
+            updatedState
+        }
+    }
 }
 
 

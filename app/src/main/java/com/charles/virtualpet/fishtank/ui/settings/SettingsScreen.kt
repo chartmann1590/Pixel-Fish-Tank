@@ -50,6 +50,8 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.charles.virtualpet.fishtank.audio.BackgroundMusicManager
+import com.charles.virtualpet.fishtank.audio.SfxManager
 import com.charles.virtualpet.fishtank.backup.BackupRepository
 import com.charles.virtualpet.fishtank.backup.BackupValidator
 import com.charles.virtualpet.fishtank.data.GameStateRepository
@@ -68,6 +70,8 @@ import java.util.Locale
 fun SettingsScreen(
     viewModel: GameViewModel,
     repository: GameStateRepository,
+    sfxManager: SfxManager?,
+    bgMusicManager: BackgroundMusicManager?,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -77,6 +81,16 @@ fun SettingsScreen(
     val backupRepository = remember { BackupRepository(context) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    
+    // Sync sfxEnabled setting with SfxManager
+    LaunchedEffect(settings.sfxEnabled) {
+        sfxManager?.setEnabled(settings.sfxEnabled)
+    }
+    
+    // Sync bgMusicEnabled setting with BackgroundMusicManager
+    LaunchedEffect(settings.bgMusicEnabled) {
+        bgMusicManager?.setEnabled(settings.bgMusicEnabled)
+    }
     
     // Permission launcher for notification permission
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
@@ -179,6 +193,24 @@ fun SettingsScreen(
                         // User wants to disable notifications
                         viewModel.updateNotificationSettings(false, settings.reminderTimes)
                     }
+                },
+                modifier = Modifier.padding(bottom = 20.dp)
+            )
+
+            // Sound Effects Card with gradient
+            SoundEffectsCard(
+                settings = settings,
+                onSfxToggle = { enabled ->
+                    viewModel.updateSfxSettings(enabled)
+                },
+                modifier = Modifier.padding(bottom = 20.dp)
+            )
+
+            // Background Music Card with gradient
+            BackgroundMusicCard(
+                settings = settings,
+                onBgMusicToggle = { enabled ->
+                    viewModel.updateBgMusicSettings(enabled)
                 },
                 modifier = Modifier.padding(bottom = 20.dp)
             )
@@ -298,6 +330,174 @@ private fun NotificationCard(
                     ) {
                         Text(
                             text = "📱 Notifications will remind you to feed and care for your fish daily.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SoundEffectsCard(
+    settings: com.charles.virtualpet.fishtank.domain.model.Settings,
+    onSfxToggle: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Transparent
+        )
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(PastelPink, PastelPurple)
+                    ),
+                    shape = RoundedCornerShape(20.dp)
+                )
+                .padding(24.dp)
+        ) {
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            text = "🔊",
+                            style = MaterialTheme.typography.displaySmall
+                        )
+                        Column {
+                            Text(
+                                text = "Sound Effects",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            Text(
+                                text = "Enable game sound effects",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.White.copy(alpha = 0.9f)
+                            )
+                        }
+                    }
+                    Switch(
+                        checked = settings.sfxEnabled,
+                        onCheckedChange = onSfxToggle,
+                        colors = androidx.compose.material3.SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = Color.White.copy(alpha = 0.7f)
+                        )
+                    )
+                }
+
+                if (settings.sfxEnabled) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.White.copy(alpha = 0.2f))
+                            .padding(12.dp)
+                    ) {
+                        Text(
+                            text = "🎵 Sound effects will play during gameplay for a more immersive experience.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BackgroundMusicCard(
+    settings: com.charles.virtualpet.fishtank.domain.model.Settings,
+    onBgMusicToggle: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Transparent
+        )
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(PastelBlue, PastelGreen)
+                    ),
+                    shape = RoundedCornerShape(20.dp)
+                )
+                .padding(24.dp)
+        ) {
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            text = "🎵",
+                            style = MaterialTheme.typography.displaySmall
+                        )
+                        Column {
+                            Text(
+                                text = "Background Music",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            Text(
+                                text = "Soft ambient music while playing",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.White.copy(alpha = 0.9f)
+                            )
+                        }
+                    }
+                    Switch(
+                        checked = settings.bgMusicEnabled,
+                        onCheckedChange = onBgMusicToggle,
+                        colors = androidx.compose.material3.SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = Color.White.copy(alpha = 0.7f)
+                        )
+                    )
+                }
+
+                if (settings.bgMusicEnabled) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.White.copy(alpha = 0.2f))
+                            .padding(12.dp)
+                    ) {
+                        Text(
+                            text = "🎶 Gentle background music will play softly while you care for your fish.",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.White
                         )

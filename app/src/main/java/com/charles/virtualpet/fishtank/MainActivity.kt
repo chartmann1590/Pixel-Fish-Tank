@@ -16,10 +16,15 @@ import com.google.firebase.perf.FirebasePerformance
 import com.charles.virtualpet.fishtank.data.GameStateRepository
 import com.charles.virtualpet.fishtank.domain.GameViewModel
 import com.charles.virtualpet.fishtank.domain.GameViewModelFactory
+import com.charles.virtualpet.fishtank.audio.BackgroundMusicManager
+import com.charles.virtualpet.fishtank.audio.SfxManager
 import com.charles.virtualpet.fishtank.ui.navigation.NavGraph
 import com.charles.virtualpet.fishtank.ui.theme.PixelFishTankTheme
 
 class MainActivity : ComponentActivity() {
+    private var sfxManager: SfxManager? = null
+    private var bgMusicManager: BackgroundMusicManager? = null
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
@@ -34,6 +39,12 @@ class MainActivity : ComponentActivity() {
         // Hide system bars for fullscreen immersive mode
         hideSystemBars()
         
+        // Initialize SfxManager
+        sfxManager = SfxManager(this)
+        
+        // Initialize BackgroundMusicManager
+        bgMusicManager = BackgroundMusicManager(this)
+        
         setContent {
             PixelFishTankTheme {
                 val viewModel: GameViewModel = viewModel(
@@ -45,7 +56,9 @@ class MainActivity : ComponentActivity() {
                 NavGraph(
                     navController = navController,
                     viewModel = viewModel,
-                    repository = repository
+                    repository = repository,
+                    sfxManager = sfxManager,
+                    bgMusicManager = bgMusicManager
                 )
             }
         }
@@ -66,6 +79,24 @@ class MainActivity : ComponentActivity() {
         if (hasFocus) {
             hideSystemBars()
         }
+    }
+    
+    override fun onPause() {
+        super.onPause()
+        bgMusicManager?.pause()
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        bgMusicManager?.resume()
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        sfxManager?.release()
+        sfxManager = null
+        bgMusicManager?.release()
+        bgMusicManager = null
     }
 }
 
