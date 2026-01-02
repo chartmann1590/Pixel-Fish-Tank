@@ -1,6 +1,8 @@
 package com.charles.virtualpet.fishtank.ui.settings
 
 import android.Manifest
+import android.app.TimePickerDialog
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -61,10 +63,43 @@ import com.charles.virtualpet.fishtank.ui.theme.PastelGreen
 import com.charles.virtualpet.fishtank.ui.theme.PastelPink
 import com.charles.virtualpet.fishtank.ui.theme.PastelPurple
 import com.charles.virtualpet.fishtank.ui.theme.PastelYellow
+import com.charles.virtualpet.fishtank.notifications.NotificationChannels
+import com.charles.virtualpet.fishtank.notifications.NotificationBuilder
+import com.charles.virtualpet.fishtank.notifications.NotificationIds
+import android.app.NotificationManager
+import androidx.core.app.NotificationManagerCompat
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+
+@Composable
+private fun TimePickerDialog(
+    context: Context,
+    initialHour: Int,
+    initialMinute: Int,
+    onTimeSelected: (Int, Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    LaunchedEffect(Unit) {
+        val calendar = Calendar.getInstance()
+        calendar.set(Calendar.HOUR_OF_DAY, initialHour)
+        calendar.set(Calendar.MINUTE, initialMinute)
+        
+        val timePickerDialog = TimePickerDialog(
+            context,
+            { _, hour, minute ->
+                onTimeSelected(hour, minute)
+            },
+            initialHour,
+            initialMinute,
+            false // 24-hour format
+        )
+        timePickerDialog.setOnDismissListener { onDismiss() }
+        timePickerDialog.show()
+    }
+}
 
 @Composable
 fun SettingsScreen(
@@ -168,6 +203,8 @@ fun SettingsScreen(
             // Notifications Card with gradient
             NotificationCard(
                 settings = settings,
+                viewModel = viewModel,
+                snackbarHostState = snackbarHostState,
                 onNotificationToggle = { enabled ->
                     if (enabled) {
                         // User wants to enable notifications
@@ -259,9 +296,90 @@ fun SettingsScreen(
 @Composable
 private fun NotificationCard(
     settings: com.charles.virtualpet.fishtank.domain.model.Settings,
+    viewModel: GameViewModel,
     onNotificationToggle: (Boolean) -> Unit,
+    snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    
+    // Parse time string to hour and minute
+    fun parseTime(timeString: String): Pair<Int, Int> {
+        return try {
+            val parts = timeString.split(":")
+            Pair(parts[0].toInt(), parts[1].toInt())
+        } catch (e: Exception) {
+            Pair(19, 0) // Default to 7:00 PM
+        }
+    }
+    
+    // Format hour and minute to time string
+    fun formatTime(hour: Int, minute: Int): String {
+        return String.format("%02d:%02d", hour, minute)
+    }
+    
+    // Time picker for daily reminder
+    var showDailyReminderTimePicker by remember { mutableStateOf(false) }
+    val (dailyHour, dailyMinute) = parseTime(settings.dailyReminderTime)
+    
+    if (showDailyReminderTimePicker) {
+        TimePickerDialog(
+            context = context,
+            initialHour = dailyHour,
+            initialMinute = dailyMinute,
+            onTimeSelected = { hour, minute ->
+                viewModel.updateDailyReminderSettings(
+                    enabled = settings.dailyReminderEnabled,
+                    time = formatTime(hour, minute)
+                )
+                showDailyReminderTimePicker = false
+            },
+            onDismiss = { showDailyReminderTimePicker = false }
+        )
+    }
+    
+    // Time picker for quiet hours start
+    var showQuietHoursStartPicker by remember { mutableStateOf(false) }
+    val (quietStartHour, quietStartMinute) = parseTime(settings.quietHoursStart)
+    
+    if (showQuietHoursStartPicker) {
+        TimePickerDialog(
+            context = context,
+            initialHour = quietStartHour,
+            initialMinute = quietStartMinute,
+            onTimeSelected = { hour, minute ->
+                viewModel.updateQuietHoursSettings(
+                    enabled = settings.quietHoursEnabled,
+                    start = formatTime(hour, minute),
+                    end = settings.quietHoursEnd
+                )
+                showQuietHoursStartPicker = false
+            },
+            onDismiss = { showQuietHoursStartPicker = false }
+        )
+    }
+    
+    // Time picker for quiet hours end
+    var showQuietHoursEndPicker by remember { mutableStateOf(false) }
+    val (quietEndHour, quietEndMinute) = parseTime(settings.quietHoursEnd)
+    
+    if (showQuietHoursEndPicker) {
+        TimePickerDialog(
+            context = context,
+            initialHour = quietEndHour,
+            initialMinute = quietEndMinute,
+            onTimeSelected = { hour, minute ->
+                viewModel.updateQuietHoursSettings(
+                    enabled = settings.quietHoursEnabled,
+                    start = settings.quietHoursStart,
+                    end = formatTime(hour, minute)
+                )
+                showQuietHoursEndPicker = false
+            },
+            onDismiss = { showQuietHoursEndPicker = false }
+        )
+    }
     Card(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
@@ -334,9 +452,226 @@ private fun NotificationCard(
                             color = Color.White
                         )
                     }
+                    
+                    
+                    // Sub-settings (only shown if master toggle is on and permission granted)
+                    val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.POST_NOTIFICATIONS
+                        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                    } else {
+                        true // Android 12 and below
+                    }
+                    
+                    if (hasPermission) {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        
+                        // Daily Check-in Reminder
+                        NotificationSubSettingRow(
+                            title = "Daily Check-in Reminder",
+                            description = "Get a daily reminder to check on your fish",
+                            enabled = settings.dailyReminderEnabled,
+                            onToggle = { enabled ->
+                                viewModel.updateDailyReminderSettings(
+                                    enabled = enabled,
+                                    time = settings.dailyReminderTime
+                                )
+                            }
+                        )
+                        
+                        if (settings.dailyReminderEnabled) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { showDailyReminderTimePicker = true }
+                                    .padding(vertical = 8.dp, horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "Reminder time: ${settings.dailyReminderTime}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.White.copy(alpha = 0.9f)
+                                )
+                                Text(
+                                    text = "Tap to change",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.White.copy(alpha = 0.7f)
+                                )
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        // Status Nudges
+                        NotificationSubSettingRow(
+                            title = "Status Nudges",
+                            description = "Get notified when your fish needs attention (hungry/dirty/sad)",
+                            enabled = settings.statusNudgesEnabled,
+                            onToggle = { enabled ->
+                                viewModel.updateStatusNudgesSettings(enabled)
+                            }
+                        )
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        // Persistent Notification
+                        NotificationSubSettingRow(
+                            title = "Persistent Fish Status",
+                            description = "Show ongoing notification with fish status",
+                            enabled = settings.persistentNotificationEnabled,
+                            onToggle = { enabled ->
+                                viewModel.updatePersistentNotificationSettings(enabled)
+                            }
+                        )
+                        
+                        Spacer(modifier = Modifier.height(20.dp))
+                        
+                        // Quiet Hours
+                        NotificationSubSettingRow(
+                            title = "Quiet Hours",
+                            description = "Don't send notifications during these hours",
+                            enabled = settings.quietHoursEnabled,
+                            onToggle = { enabled ->
+                                viewModel.updateQuietHoursSettings(
+                                    enabled = enabled,
+                                    start = settings.quietHoursStart,
+                                    end = settings.quietHoursEnd
+                                )
+                            }
+                        )
+                        
+                        if (settings.quietHoursEnabled) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { showQuietHoursStartPicker = true }
+                                    .padding(vertical = 8.dp, horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "Start: ${settings.quietHoursStart}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.White.copy(alpha = 0.9f)
+                                )
+                                Text(
+                                    text = "Tap to change",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.White.copy(alpha = 0.7f)
+                                )
+                            }
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { showQuietHoursEndPicker = true }
+                                    .padding(vertical = 8.dp, horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "End: ${settings.quietHoursEnd}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.White.copy(alpha = 0.9f)
+                                )
+                                Text(
+                                    text = "Tap to change",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.White.copy(alpha = 0.7f)
+                                )
+                            }
+                        }
+                        
+                        // Debug test button (only in debug builds)
+                        // Note: BuildConfig is generated at compile time, so we'll always show this in debug
+                        // In production builds, this code path won't be included due to dead code elimination
+                        val isDebugBuild = try {
+                            @Suppress("UNCHECKED_CAST")
+                            Class.forName("com.charles.virtualpet.fishtank.BuildConfig")
+                                .getDeclaredField("DEBUG")
+                                .get(null) as Boolean
+                        } catch (e: Exception) {
+                            false
+                        }
+                        if (isDebugBuild) {
+                            Spacer(modifier = Modifier.height(20.dp))
+                            Button(
+                                onClick = {
+                                    // Initialize channels if not already done
+                                    NotificationChannels.createChannels(context)
+                                    
+                                    // Check permission
+                                    val notificationManager = NotificationManagerCompat.from(context)
+                                    if (notificationManager.areNotificationsEnabled()) {
+                                        val builder = NotificationBuilder(context)
+                                        val notification = builder.buildTestNotification()
+                                        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                                        manager.notify(NotificationIds.DAILY_REMINDER, notification)
+                                        coroutineScope.launch {
+                                            snackbarHostState.showSnackbar("Test notification sent!")
+                                        }
+                                    } else {
+                                        coroutineScope.launch {
+                                            snackbarHostState.showSnackbar("Notifications not enabled")
+                                        }
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                    containerColor = Color.White.copy(alpha = 0.3f)
+                                )
+                            ) {
+                                Text(
+                                    text = "🧪 Test Notification (Debug)",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.White
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun NotificationSubSettingRow(
+    title: String,
+    description: String,
+    enabled: Boolean,
+    onToggle: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.White.copy(alpha = 0.8f)
+            )
+        }
+        Switch(
+            checked = enabled,
+            onCheckedChange = onToggle,
+            colors = androidx.compose.material3.SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = Color.White.copy(alpha = 0.7f)
+            )
+        )
     }
 }
 

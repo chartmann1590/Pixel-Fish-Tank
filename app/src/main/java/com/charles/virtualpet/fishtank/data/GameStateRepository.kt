@@ -54,6 +54,13 @@ class GameStateRepository(private val context: Context) {
         val LAST_COMPLETED_DATE = stringPreferencesKey("last_completed_date")
         val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
         val REMINDER_TIMES = stringPreferencesKey("reminder_times")
+        val DAILY_REMINDER_ENABLED = booleanPreferencesKey("daily_reminder_enabled")
+        val DAILY_REMINDER_TIME = stringPreferencesKey("daily_reminder_time")
+        val STATUS_NUDGES_ENABLED = booleanPreferencesKey("status_nudges_enabled")
+        val PERSISTENT_NOTIFICATION_ENABLED = booleanPreferencesKey("persistent_notification_enabled")
+        val QUIET_HOURS_ENABLED = booleanPreferencesKey("quiet_hours_enabled")
+        val QUIET_HOURS_START = stringPreferencesKey("quiet_hours_start")
+        val QUIET_HOURS_END = stringPreferencesKey("quiet_hours_end")
         val SFX_ENABLED = booleanPreferencesKey("sfx_enabled")
         val BG_MUSIC_ENABLED = booleanPreferencesKey("bg_music_enabled")
         val LAST_BACKUP_EPOCH = longPreferencesKey("last_backup_epoch")
@@ -101,6 +108,13 @@ class GameStateRepository(private val context: Context) {
             // Save settings
             preferences[Keys.NOTIFICATIONS_ENABLED] = gameState.settings.notificationsEnabled
             preferences[Keys.REMINDER_TIMES] = serializeReminderTimes(gameState.settings.reminderTimes)
+            preferences[Keys.DAILY_REMINDER_ENABLED] = gameState.settings.dailyReminderEnabled
+            preferences[Keys.DAILY_REMINDER_TIME] = gameState.settings.dailyReminderTime
+            preferences[Keys.STATUS_NUDGES_ENABLED] = gameState.settings.statusNudgesEnabled
+            preferences[Keys.PERSISTENT_NOTIFICATION_ENABLED] = gameState.settings.persistentNotificationEnabled
+            preferences[Keys.QUIET_HOURS_ENABLED] = gameState.settings.quietHoursEnabled
+            preferences[Keys.QUIET_HOURS_START] = gameState.settings.quietHoursStart
+            preferences[Keys.QUIET_HOURS_END] = gameState.settings.quietHoursEnd
             preferences[Keys.SFX_ENABLED] = gameState.settings.sfxEnabled
             preferences[Keys.BG_MUSIC_ENABLED] = gameState.settings.bgMusicEnabled
         }
@@ -284,9 +298,17 @@ class GameStateRepository(private val context: Context) {
     }
 
     private fun parseSettings(preferences: Preferences): Settings {
+        val notificationsEnabled = preferences[Keys.NOTIFICATIONS_ENABLED] ?: false
         return Settings(
-            notificationsEnabled = preferences[Keys.NOTIFICATIONS_ENABLED] ?: false,
+            notificationsEnabled = notificationsEnabled,
             reminderTimes = parseReminderTimes(preferences[Keys.REMINDER_TIMES]),
+            dailyReminderEnabled = preferences[Keys.DAILY_REMINDER_ENABLED] ?: notificationsEnabled, // Default to notificationsEnabled if not set
+            dailyReminderTime = preferences[Keys.DAILY_REMINDER_TIME] ?: "19:00",
+            statusNudgesEnabled = preferences[Keys.STATUS_NUDGES_ENABLED] ?: true,
+            persistentNotificationEnabled = preferences[Keys.PERSISTENT_NOTIFICATION_ENABLED] ?: false,
+            quietHoursEnabled = preferences[Keys.QUIET_HOURS_ENABLED] ?: false,
+            quietHoursStart = preferences[Keys.QUIET_HOURS_START] ?: "22:00",
+            quietHoursEnd = preferences[Keys.QUIET_HOURS_END] ?: "08:00",
             sfxEnabled = preferences[Keys.SFX_ENABLED] ?: true,
             bgMusicEnabled = preferences[Keys.BG_MUSIC_ENABLED] ?: true
         )

@@ -8,6 +8,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.FirebaseApp
@@ -20,13 +22,26 @@ import com.charles.virtualpet.fishtank.audio.BackgroundMusicManager
 import com.charles.virtualpet.fishtank.audio.SfxManager
 import com.charles.virtualpet.fishtank.ui.navigation.NavGraph
 import com.charles.virtualpet.fishtank.ui.theme.PixelFishTankTheme
+import com.charles.virtualpet.fishtank.notifications.NotificationChannels
+import com.charles.virtualpet.fishtank.notifications.NotificationPrefs
+import com.charles.virtualpet.fishtank.notifications.PersistentNotificationManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private var sfxManager: SfxManager? = null
     private var bgMusicManager: BackgroundMusicManager? = null
+    private val notificationPrefs: NotificationPrefs by lazy { NotificationPrefs(applicationContext) }
+    private val persistentNotificationManager = PersistentNotificationManager(this)
+    private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Handle notification action intents
+        handleNotificationAction(intent)
         
         // Initialize Firebase
         FirebaseApp.initializeApp(this)
@@ -44,6 +59,9 @@ class MainActivity : ComponentActivity() {
         
         // Initialize BackgroundMusicManager
         bgMusicManager = BackgroundMusicManager(this)
+        
+        // Initialize notification channels
+        NotificationChannels.createChannels(this)
         
         setContent {
             PixelFishTankTheme {
@@ -89,6 +107,10 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         bgMusicManager?.resume()
+        // Track app open time for notification decision engine
+        coroutineScope.launch {
+            notificationPrefs.updateLastAppOpenEpoch(System.currentTimeMillis())
+        }
     }
     
     override fun onDestroy() {
@@ -97,6 +119,19 @@ class MainActivity : ComponentActivity() {
         sfxManager = null
         bgMusicManager?.release()
         bgMusicManager = null
+    }
+    
+    override fun onNewIntent(intent: android.content.Intent?) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleNotificationAction(intent)
+    }
+    
+    private fun handleNotificationAction(intent: android.content.Intent?) {
+        if (intent == null) return
+        val action = intent.action
+        // Actions open the app - user can manually feed/clean from the tank screen
+        // Future enhancement: could auto-trigger feed/clean actions here
     }
 }
 
