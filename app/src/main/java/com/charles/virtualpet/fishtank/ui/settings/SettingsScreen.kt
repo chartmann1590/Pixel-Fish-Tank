@@ -1,11 +1,13 @@
 package com.charles.virtualpet.fishtank.ui.settings
 
 import android.Manifest
+import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,6 +46,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -309,6 +312,8 @@ private fun NotificationCard(
 private fun AboutCard(
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    
     Card(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
@@ -348,8 +353,56 @@ private fun AboutCard(
                 Text(
                     text = "Pixel Fish Tank v1.0\n\nTake care of your virtual pet fish by feeding, cleaning, playing mini-games, and decorating your tank!",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.95f)
+                    color = Color.White.copy(alpha = 0.95f),
+                    modifier = Modifier.padding(bottom = 16.dp)
                 )
+                
+                // Links section
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "🌐 Website",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    Text(
+                        text = "https://pixel-fish-tank.web.app/",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.9f),
+                        textDecoration = TextDecoration.Underline,
+                        modifier = Modifier
+                            .clickable {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://pixel-fish-tank.web.app/"))
+                                context.startActivity(intent)
+                            }
+                            .padding(vertical = 4.dp)
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Text(
+                        text = "💻 GitHub",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    Text(
+                        text = "https://github.com/chartmann1590/Pixel-Fish-Tank",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.9f),
+                        textDecoration = TextDecoration.Underline,
+                        modifier = Modifier
+                            .clickable {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/chartmann1590/Pixel-Fish-Tank"))
+                                context.startActivity(intent)
+                            }
+                            .padding(vertical = 4.dp)
+                    )
+                }
             }
         }
     }

@@ -2,6 +2,7 @@ package com.charles.virtualpet.fishtank.ui.components
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
@@ -15,6 +16,7 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.charles.virtualpet.fishtank.R
@@ -27,7 +29,8 @@ fun FishDisplay(
     mood: FishMood = FishMood.NEUTRAL,
     modifier: Modifier = Modifier,
     onPositionUpdate: ((Float, Float) -> Unit)? = null,
-    nearbyFood: List<Pair<Float, Float>> = emptyList() // List of (x, y) food positions normalized 0-1
+    nearbyFood: List<Pair<Float, Float>> = emptyList(), // List of (x, y) food positions normalized 0-1
+    onClick: (() -> Unit)? = null // Callback when fish is clicked
 ) {
     val fishImageRes = when (mood) {
         FishMood.HAPPY -> R.drawable.fish_happy
@@ -206,6 +209,17 @@ fun FishDisplay(
                 .size(200.dp)
                 .scale(scaleX = scaleX, scaleY = 1f)
                 .offset(x = smoothX.dp, y = smoothY.dp)
+                .then(
+                    if (onClick != null) {
+                        Modifier.pointerInput(Unit) {
+                            detectTapGestures {
+                                onClick()
+                            }
+                        }
+                    } else {
+                        Modifier
+                    }
+                )
         )
     }
 }

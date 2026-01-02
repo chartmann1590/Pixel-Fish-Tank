@@ -1,8 +1,12 @@
 package com.charles.virtualpet.fishtank.ui.tank
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -58,8 +63,33 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.Button
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.delay
 import java.util.UUID
+import kotlin.math.sqrt
+import kotlin.math.pow
+
+// Bubble data class for floating bubbles
+data class FloatingBubble(
+    val id: String,
+    val x: Float, // Normalized 0-1
+    val y: Float, // Normalized 0-1, starts near fish position
+    val radius: Float, // In pixels
+    val speed: Float, // Pixels per frame
+    val coinValue: Int = (1..10).random() // Random coin value 1-10
+)
+
+// Coin reward animation data class
+data class CoinReward(
+    val id: String,
+    val x: Float, // Normalized 0-1, position where bubble was popped
+    val y: Float, // Normalized 0-1
+    val amount: Int, // Coin amount
+    val startTime: Long = System.currentTimeMillis()
+)
 
 @Composable
 fun TankScreen(
@@ -84,12 +114,18 @@ fun TankScreen(
     var isPlacingDecoration by remember { mutableStateOf(false) }
     var selectedDecorationId by remember { mutableStateOf<String?>(null) }
     var screenSize by remember { mutableStateOf<IntSize?>(null) }
+    var containerScreenPosition by remember { mutableStateOf<androidx.compose.ui.geometry.Offset?>(null) }
     val density = androidx.compose.ui.platform.LocalDensity.current
     
     // Food system state
     val activeFood = remember { mutableStateListOf<FoodItem>() }
     var fishX by remember { mutableStateOf(0.5f) }
     var fishY by remember { mutableStateOf(0.5f) }
+    
+    // Bubble system state - use mutableStateOf with list for proper recomposition
+    var activeBubbles by remember { mutableStateOf<List<FloatingBubble>>(emptyList()) }
+    val coinRewards = remember { mutableStateListOf<CoinReward>() }
+    var containerSize by remember { mutableStateOf<IntSize?>(null) }
     
     // Spawn food when feed button is clicked
     fun spawnFood() {
@@ -153,6 +189,74 @@ fun TankScreen(
     fun cleanUneatenFood() {
         activeFood.removeAll { it.hasReachedBottom }
     }
+    
+    // Spawn bubble when fish is clicked (random chance)
+    fun onFishClick() {
+        // 30% chance to spawn a bubble
+        if (kotlin.random.Random.nextFloat() < 0.3f) {
+            val bubbleId = UUID.randomUUID().toString()
+            val bubbleRadius = with(density) { 
+                val baseRadius = 15.dp.toPx()
+                val variation = kotlin.random.Random.nextFloat() * 20.dp.toPx()
+                baseRadius + variation
+            }
+            val bubbleSpeed = (2f + kotlin.random.Random.nextFloat() * 3f) // 2-5 pixels per frame (faster)
+            
+            // Spawn bubble near fish position with slight random offset
+            val bubbleX = (fishX + (kotlin.random.Random.nextFloat() - 0.5f) * 0.2f).coerceIn(0.1f, 0.9f)
+            val bubbleY = fishY // Start at fish Y position
+            
+            activeBubbles = activeBubbles + FloatingBubble(
+                id = bubbleId,
+                x = bubbleX,
+                y = bubbleY,
+                radius = bubbleRadius,
+                speed = bubbleSpeed
+            )
+        }
+    }
+    
+    // Move bubbles upward - continuously update (like mini-game)
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(16) // ~60fps
+            
+            if (activeBubbles.isEmpty() || containerSize == null) {
+                delay(100) // Wait a bit if no bubbles
+                continue
+            }
+            
+            val containerHeightPx = containerSize!!.height.toFloat()
+            
+            // Update bubbles by creating new list (triggers recomposition)
+            val updatedBubbles = activeBubbles.map { bubble ->
+                // Move bubble up (decrease Y in normalized coordinates)
+                // Speed is in pixels per frame, convert to normalized coordinates
+                val speedNormalized = bubble.speed / containerHeightPx
+                val newY = bubble.y - speedNormalized
+                bubble.copy(y = newY)
+            }
+            
+            val filteredBubbles = updatedBubbles.filter { it.y > 0f } // Remove bubbles that reached the top (y <= 0) - no reward
+            
+            activeBubbles = filteredBubbles
+        }
+    }
+    
+    // Remove coin rewards after 3 seconds
+    LaunchedEffect(coinRewards.size) {
+        while (true) {
+            delay(100) // Check every 100ms
+            val currentTime = System.currentTimeMillis()
+            val rewardsToRemove = coinRewards.filter { 
+                currentTime - it.startTime > 3000 // 3 seconds
+            }.map { it.id }
+            
+            rewardsToRemove.forEach { id ->
+                coinRewards.removeAll { it.id == id }
+            }
+        }
+    }
 
     // Determine tank background based on cleanliness
     val tankBackgroundRes = when {
@@ -199,7 +303,7 @@ fun TankScreen(
                     }
             )
         }
-
+        
         // Display placed decorations at ROOT LEVEL - NO BOUNDARIES, ANYWHERE ON SCREEN
         placedDecorations.forEach { placed ->
             val decoration = DecorationStore.getDecorationById(placed.decorationId)
@@ -296,7 +400,13 @@ fun TankScreen(
                     text = stringResource(R.string.tank_title),
                     style = MaterialTheme.typography.displayMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier
+                        .background(
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
                 )
                 androidx.compose.material3.IconButton(
                     onClick = onNavigateToSettings
@@ -347,7 +457,7 @@ fun TankScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             // Fish display area with decorations - Expanded to fill space down to bottom stats bar
-            var containerSize by remember { mutableStateOf<IntSize?>(null) }
+            // NOTE: containerSize is already defined at top level (line 128), don't redeclare!
             
             Box(
                 modifier = Modifier
@@ -355,6 +465,11 @@ fun TankScreen(
                     .weight(1f)
                     .onSizeChanged { size ->
                         containerSize = size
+                    }
+                    .onGloballyPositioned { layoutCoordinates ->
+                        // Get container's position on screen for coordinate mapping
+                        val position = layoutCoordinates.localToRoot(androidx.compose.ui.geometry.Offset.Zero)
+                        containerScreenPosition = position
                     }
             ) {
                 
@@ -384,7 +499,8 @@ fun TankScreen(
                         fishX = x
                         fishY = y
                     },
-                    nearbyFood = foodPositions
+                    nearbyFood = foodPositions,
+                    onClick = { onFishClick() }
                 )
                 
                 // Display falling food
@@ -398,6 +514,17 @@ fun TankScreen(
                         food = food,
                         containerHeight = containerHeightDp
                     )
+                }
+                
+                // Display coin rewards
+                if (containerSize != null && coinRewards.isNotEmpty()) {
+                    coinRewards.forEach { reward ->
+                        CoinRewardDisplay(
+                            reward = reward,
+                            containerSize = containerSize!!,
+                            density = density
+                        )
+                    }
                 }
                 
                 // Show decoration selector when in placement mode
@@ -547,6 +674,123 @@ fun TankScreen(
                 )
             }
         }
+        
+        // Render bubbles with click detection - ABSOLUTE LAST at root level
+        if (containerSize != null && activeBubbles.isNotEmpty() && !isPlacingDecoration) {
+            // Draw bubbles in container (inside the container Box)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectTapGestures { tapOffset ->
+                            // Convert screen tap to container-relative coordinates
+                            if (containerScreenPosition != null) {
+                                val containerPos = containerScreenPosition!!
+                                val containerRelativeX = tapOffset.x - containerPos.x
+                                val containerRelativeY = tapOffset.y - containerPos.y
+                                
+                                // Only process if tap is within container bounds
+                                if (containerRelativeX >= 0 && containerRelativeX < containerSize!!.width &&
+                                    containerRelativeY >= 0 && containerRelativeY < containerSize!!.height) {
+                                    
+                                    val containerWidth = containerSize!!.width.toFloat()
+                                    val containerHeight = containerSize!!.height.toFloat()
+                                    
+                                    // Check if tap hit any bubble
+                                    val bubblesToRemove = mutableListOf<String>()
+                                    
+                                    activeBubbles.forEach { bubble ->
+                                        val bubbleX = bubble.x * containerWidth
+                                        val bubbleY = bubble.y * containerHeight
+                                        
+                                        val distance = sqrt(
+                                            (containerRelativeX - bubbleX).pow(2) + (containerRelativeY - bubbleY).pow(2)
+                                        )
+                                        
+                                        if (distance <= bubble.radius) {
+                                            // Bubble clicked! Give coins and show reward
+                                            viewModel.addCoins(bubble.coinValue)
+                                            
+                                            // Create coin reward animation at bubble position
+                                            val rewardId = UUID.randomUUID().toString()
+                                            coinRewards.add(
+                                                CoinReward(
+                                                    id = rewardId,
+                                                    x = bubble.x,
+                                                    y = bubble.y,
+                                                    amount = bubble.coinValue
+                                                )
+                                            )
+                                            
+                                            bubblesToRemove.add(bubble.id)
+                                        }
+                                    }
+                                    
+                                    // Remove clicked bubbles
+                                    if (bubblesToRemove.isNotEmpty()) {
+                                        activeBubbles = activeBubbles.filter { bubble ->
+                                            !bubblesToRemove.contains(bubble.id)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+            ) {
+                // Draw bubbles on a Canvas positioned at container location
+                if (containerScreenPosition != null) {
+                    Box(
+                        modifier = Modifier
+                            .offset(
+                                x = with(density) { containerScreenPosition!!.x.toDp() },
+                                y = with(density) { containerScreenPosition!!.y.toDp() }
+                            )
+                            .size(
+                                width = with(density) { containerSize!!.width.toDp() },
+                                height = with(density) { containerSize!!.height.toDp() }
+                            )
+                    ) {
+                        Canvas(modifier = Modifier.fillMaxSize()) {
+                            val containerWidth = size.width
+                            val containerHeight = size.height
+                            
+                            activeBubbles.forEach { bubble ->
+                                val bubbleX = bubble.x * containerWidth
+                                val bubbleY = bubble.y * containerHeight
+                                
+                                // Draw bubble with gradient effect (same as mini-game)
+                                drawCircle(
+                                    brush = Brush.radialGradient(
+                                        colors = listOf(
+                                            Color(0xFFE1F5FE).copy(alpha = 0.9f),
+                                            Color(0xFF64B5F6).copy(alpha = 0.7f)
+                                        ),
+                                        center = Offset(bubbleX, bubbleY),
+                                        radius = bubble.radius
+                                    ),
+                                    radius = bubble.radius,
+                                    center = Offset(bubbleX, bubbleY)
+                                )
+                                // Draw outline
+                                drawCircle(
+                                    color = Color(0xFF1976D2),
+                                    radius = bubble.radius,
+                                    center = Offset(bubbleX, bubbleY),
+                                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2f)
+                                )
+                                // Draw highlight
+                                drawCircle(
+                                    color = Color.White.copy(alpha = 0.6f),
+                                    radius = bubble.radius * 0.4f,
+                                    center = Offset(bubbleX - bubble.radius * 0.3f, bubbleY - bubble.radius * 0.3f)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
     }
 }
 
@@ -615,6 +859,59 @@ private fun FallingFood(
                     y = (progress * containerHeight.value).dp
                 )
         )
+    }
+}
+
+@Composable
+private fun CoinRewardDisplay(
+    reward: CoinReward,
+    containerSize: IntSize,
+    density: androidx.compose.ui.unit.Density
+) {
+    val elapsedTime = System.currentTimeMillis() - reward.startTime
+    val duration = 3000L // 3 seconds total
+    val progress = (elapsedTime.toFloat() / duration).coerceIn(0f, 1f)
+    
+    // Fade out in the last second (progress 0.67 to 1.0)
+    val alpha = if (progress < 0.67f) {
+        1f
+    } else {
+        // Fade from 1.0 to 0.0 over the last third
+        val fadeProgress = (progress - 0.67f) / 0.33f
+        1f - fadeProgress
+    }
+    
+    // Slight upward movement
+    val verticalOffset = progress * 50f // Move up 50dp over 3 seconds
+    
+    // Calculate position
+    val xPos = reward.x * containerSize.width.toFloat()
+    val yPos = reward.y * containerSize.height.toFloat() - verticalOffset
+    
+    Box(
+        modifier = Modifier
+            .offset(
+                x = with(density) { (xPos - 40).toDp() },
+                y = with(density) { (yPos - 40).toDp() }
+            )
+            .alpha(alpha)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.coin),
+                contentDescription = "Coin",
+                modifier = Modifier.size(60.dp) // Make coin about the size of a bubble (bubble radius ~15-35dp, so diameter ~30-70dp)
+            )
+            Text(
+                text = "+${reward.amount}",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFFFD700) // Gold color
+            )
+        }
     }
 }
 

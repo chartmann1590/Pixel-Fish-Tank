@@ -330,37 +330,10 @@ If your fish's progress seems to have reset:
 - **Don't uninstall** the app if you want to keep progress
 - **Don't clear app data** in Android settings
 - **Keep device storage free** - Ensure you have enough space
-- **Regular backups** - Use the built-in backup feature (see below)
+- **Regular backups** - Future versions may support backup/restore
 
 **Recovery:**
-If you have a backup file, you can restore your progress:
-
-1. **Open Settings** - Tap the Settings button (⚙️) in the top right
-2. **Go to Backup & Restore** - Scroll to the "Backup & Restore" section
-3. **Tap "📥 Import Backup"** - Select your backup JSON file
-4. **Confirm** - The app will ask you to confirm (this will overwrite current progress)
-5. **Wait for restore** - Your progress will be restored
-
-**How to Create Backups:**
-1. **Open Settings** - Tap the Settings button (⚙️) in the top right
-2. **Go to Backup & Restore** - Scroll to the "Backup & Restore" section
-3. **Tap "📤 Export Backup"** - Choose where to save the backup file
-4. **Save the file** - The backup will be saved as a JSON file (e.g., `pixelfishtank-backup-2024-01-15-1430.json`)
-5. **Store safely** - Save the backup file to Google Drive, email it to yourself, or keep it on your device
-
-**Backup includes:**
-- Fish stats (hunger, cleanliness, happiness, level, XP)
-- Coins and inventory items
-- Placed decorations
-- Daily tasks and streaks
-- Settings and preferences
-- Mini-game high scores
-
-**Best practices:**
-- Create backups regularly (weekly or monthly)
-- Store backups in multiple places (device + cloud)
-- Create a backup before major app updates
-- Create a backup before uninstalling or clearing data
+Unfortunately, if data is lost, it cannot be recovered in v1. Future versions may include backup features.
 
 ---
 
@@ -647,9 +620,9 @@ Found a bug? Here's how to report it:
 5. **Steps to reproduce** - Can you make it happen again?
 
 **Where to report:**
-- **Email support:** tickets@pixel-fish-tank.p.tawk.email
-- **GitHub Issues:** [Report on GitHub](https://github.com/chartmann1590/Pixel-Fish-Tank/issues)
-- **App store review/feedback** - Leave a review on Google Play
+- Email support (if available)
+- App store review/feedback
+- In-app feedback (if available)
 
 **Be specific:**
 - "The app crashed" → "The app crashed when I tapped the Feed button after playing a mini-game"
@@ -657,46 +630,26 @@ Found a bug? Here's how to report it:
 
 ---
 
-### Data Backup and Restore
+### Data Backup and Restore (Future Feature)
 **Category:** Technical Support  
-**Tags:** backup, restore, data, export, import
+**Tags:** backup, restore, data, cloud
 
-**Backup and restore is now available!** You can save your game progress to a file and restore it later.
+**Current status (v1):**
+- All data is stored locally on your device
+- No cloud backup available yet
+- Uninstalling the app will delete your progress
 
-**How to create a backup:**
-1. Open the app and tap the **Settings** button (⚙️) in the top right
-2. Scroll to the **"Backup & Restore"** section
-3. Tap **"📤 Export Backup"**
-4. Choose where to save the file (Downloads, Google Drive, etc.)
-5. The backup will be saved as a JSON file with a timestamp (e.g., `pixelfishtank-backup-2024-01-15-1430.json`)
+**Future plans:**
+- Manual backup/restore via Google Drive
+- Export/import save data (JSON file)
+- Optional cloud sync
 
-**How to restore from backup:**
-1. Open Settings and go to **"Backup & Restore"**
-2. Tap **"📥 Import Backup"**
-3. Select your backup JSON file
-4. Confirm the import (this will replace your current progress)
-5. Wait for the restore to complete
+**Until then:**
+- Don't uninstall the app if you want to keep progress
+- Don't clear app data in Android settings
+- Keep your device storage healthy
 
-**What's included in backups:**
-- Fish stats (hunger, cleanliness, happiness, level, XP)
-- Coins and inventory items
-- Placed decorations in your tank
-- Daily tasks progress and streaks
-- App settings and preferences
-- Mini-game high scores
-
-**Important notes:**
-- Backups are saved as JSON files on your device
-- You can manually copy backups to cloud storage (Google Drive, etc.)
-- Importing a backup will **overwrite** your current progress
-- Always create a backup before importing if you want to keep your current progress
-- The app shows when you last created a backup in the Settings screen
-
-**Best practices:**
-- Create backups regularly (weekly or monthly)
-- Store backups in multiple locations (device + cloud)
-- Create a backup before major app updates
-- Keep multiple backup files if you want to restore to different points in time
+**We're working on it!** Backup features are planned for future updates.
 
 ---
 
@@ -711,7 +664,7 @@ A: No! Pixel Fish Tank works completely offline. All data is stored on your devi
 A: Not in v1, but multiple tanks may be added in future updates.
 
 **Q: Will my progress transfer to a new device?**  
-A: Yes! Use the backup feature to export your progress, then import it on your new device. Go to Settings > Backup & Restore > Export Backup, save the file, then import it on your new device.
+A: Not in v1. Future versions may include backup/restore features.
 
 **Q: Is the app free?**  
 A: Check the app store listing for current pricing information.
