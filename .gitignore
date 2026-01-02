@@ -101,3 +101,9 @@ claude.md
 # Scripts directory
 scripts/
 
+# Cursor IDE
+.cursor/
+
+# Firebase
+.firebase/
+
