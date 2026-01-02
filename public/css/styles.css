@@ -110,6 +110,26 @@ body {
     width: 100%;
 }
 
+.knowledge-base-link {
+    background: var(--aqua-green);
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    color: white !important;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.knowledge-base-link:hover {
+    background: #4a9e4a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(92, 184, 92, 0.3);
+}
+
+.knowledge-base-link::after {
+    display: none;
+}
+
 .github-link {
     background: var(--primary-blue);
     padding: 0.5rem 1rem;
@@ -727,6 +747,30 @@ body {
 .footer-section .contact-email {
     color: var(--aqua-blue);
     font-size: 0.95rem;
+}
+
+.footer-section .knowledge-base-link {
+    color: var(--aqua-green);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.footer-section .knowledge-base-link:hover {
+    color: #4a9e4a;
+    text-decoration: underline;
+}
+
+.faq-answer ul {
+    list-style-type: disc;
+    margin-top: 0.5rem;
+    padding-left: 1.5rem;
+}
+
+.faq-answer ul li {
+    margin-bottom: 0.5rem;
+    color: var(--text-muted);
+    line-height: 1.6;
 }
 
 .footer-bottom {

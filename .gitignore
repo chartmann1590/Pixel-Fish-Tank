@@ -98,3 +98,6 @@ crashlytics-wrapper.properties
 # Claude AI
 claude.md
 
+# Scripts directory
+scripts/
+

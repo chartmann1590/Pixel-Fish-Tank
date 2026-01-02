@@ -647,9 +647,9 @@ Found a bug? Here's how to report it:
 5. **Steps to reproduce** - Can you make it happen again?
 
 **Where to report:**
-- Email support (if available)
-- App store review/feedback
-- In-app feedback (if available)
+- **Email support:** tickets@pixel-fish-tank.p.tawk.email
+- **GitHub Issues:** [Report on GitHub](https://github.com/chartmann1590/Pixel-Fish-Tank/issues)
+- **App store review/feedback** - Leave a review on Google Play
 
 **Be specific:**
 - "The app crashed" → "The app crashed when I tapped the Feed button after playing a mini-game"

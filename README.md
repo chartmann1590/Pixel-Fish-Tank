@@ -11,17 +11,29 @@ Pixel Fish Tank is a Tamagotchi-style virtual pet game for Android. Take care of
 ### Core Gameplay
 - **Virtual Fish System**: Manage your fish's hunger, cleanliness, happiness, level, and XP
 - **Tank Interaction**: Feed your fish and clean its tank to keep it healthy
-- **Mini-Games**: Play fun mini-games to earn coins and XP
+- **Mini-Games**: Three engaging mini-games (Timing Bar Challenge, Bubble Pop, Cleanup Rush) with difficulty levels
 - **Decoration System**: Customize your tank with various decorations
 - **Daily Tasks**: Complete daily tasks to maintain streaks and earn rewards
+- **Backup & Restore**: Export and import your game progress with JSON validation
 - **Offline-First**: Fully playable without an internet connection
+
+### Home Screen Widgets
+- **Small Fish Status Widget (2x1)**: Quick fish status with mood, hunger bar, level & coins
+- **Medium Fish Status Widget (3x2)**: Detailed view with all three stat progress bars
+- **Streak Counter Widget (2x2)**: Fire emoji with current streak and best streak record
+- **Daily Tasks Widget (4x3)**: Task checklist with completion status and dynamic messages
+- Beautiful pastel gradient backgrounds with color-coded progress bars
+- Real-time updates when game state changes
+- All widgets clickable to open the app
 
 ### Technical Features
 - Built with **Jetpack Compose** for modern UI
 - Uses **DataStore** for local data persistence
-- **Firebase** integration for crash reporting and analytics
+- **Firebase** integration for crash reporting, analytics, and messaging
 - Material Design 3 theming
+- Traditional RemoteViews for enhanced widget design
 - Smooth animations and pixel-art graphics
+- High score tracking for all mini-games
 
 ## 🎮 Getting Started
 
@@ -141,14 +153,20 @@ Check the issue tracker for known bugs and planned features.
 
 ## 🗺️ Roadmap
 
-### v1.0 (Current)
-- Core fish care mechanics
-- Basic mini-game
-- Decoration system
-- Daily tasks and streaks
+### v1.1 (Current)
+- ✅ Beautiful home screen widgets (4 types)
+- ✅ Three mini-games with difficulty levels
+- ✅ Backup & restore functionality
+- ✅ Enhanced widget system with RemoteViews
+- ✅ High score tracking
+
+### v1.0
+- ✅ Core fish care mechanics
+- ✅ Decoration system
+- ✅ Daily tasks and streaks
+- ✅ Firebase integration
 
 ### Future Features
-- Home screen widgets
 - Screenshot sharing
 - Additional fish species
 - More mini-games
