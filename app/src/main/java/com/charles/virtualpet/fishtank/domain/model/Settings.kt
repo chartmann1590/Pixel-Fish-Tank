@@ -11,6 +11,7 @@ data class Settings(
     val quietHoursStart: String = "22:00", // Format: "HH:mm"
     val quietHoursEnd: String = "08:00", // Format: "HH:mm"
     val sfxEnabled: Boolean = true,
-    val bgMusicEnabled: Boolean = true
+    val bgMusicEnabled: Boolean = true,
+    val hasCompletedTutorial: Boolean = false
 )
 

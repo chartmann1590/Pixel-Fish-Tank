@@ -58,6 +58,9 @@ import com.charles.virtualpet.fishtank.ui.components.FishDisplay
 import com.charles.virtualpet.fishtank.ui.components.FoodItem
 import com.charles.virtualpet.fishtank.ui.components.StatBar
 import com.charles.virtualpet.fishtank.ui.tank.TankDimensions
+import com.charles.virtualpet.fishtank.ui.tutorial.TankGuidedTour
+import com.charles.virtualpet.fishtank.ui.tutorial.CaptureButtonBounds
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.background
@@ -104,6 +107,7 @@ fun TankScreen(
     onNavigateToStore: () -> Unit = {},
     onNavigateToPlacement: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
+    showGuidedTourOnStart: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val gameState by viewModel.gameState.collectAsStateWithLifecycle()
@@ -143,6 +147,10 @@ fun TankScreen(
         }
         previousMood = mood
     }
+    
+    // Guided tour state
+    var showGuidedTour by remember { mutableStateOf(showGuidedTourOnStart) }
+    var buttonBounds by remember { mutableStateOf<Map<String, Rect>>(emptyMap()) }
     
     // Decoration placement mode
     var isPlacingDecoration by remember { mutableStateOf(false) }
@@ -383,12 +391,12 @@ fun TankScreen(
         ExpandableFAB(
             actions = listOf(
                 FABAction(
-                    label = stringResource(R.string.button_feed),
+                    label = "feed", // Use ID for tour matching
                     iconRes = R.drawable.ic_feed,
                     onClick = { spawnFood() }
                 ),
                 FABAction(
-                    label = stringResource(R.string.button_clean),
+                    label = "clean", // Use ID for tour matching
                     iconRes = R.drawable.ic_clean,
                     onClick = { 
                         viewModel.cleanTank()
@@ -396,7 +404,7 @@ fun TankScreen(
                     }
                 ),
                 FABAction(
-                    label = "Mini-Game",
+                    label = "minigame", // Use ID for tour matching
                     iconRes = null,
                     onClick = onNavigateToMiniGame
                 ),
@@ -406,7 +414,7 @@ fun TankScreen(
                     onClick = onNavigateToStore
                 ),
                 FABAction(
-                    label = "Decorate",
+                    label = "decorate", // Use ID for tour matching
                     iconRes = null,
                     onClick = {
                         if (ownedDecorations.isNotEmpty()) {
@@ -418,6 +426,20 @@ fun TankScreen(
                     }
                 )
             ),
+            onButtonBoundsCaptured = { buttonId, bounds ->
+                buttonBounds = buttonBounds + (buttonId to bounds)
+            },
+            forceExpanded = showGuidedTour, // Expand FAB when tour is active
+            modifier = Modifier.fillMaxSize()
+        )
+        
+        // Guided tour overlay
+        TankGuidedTour(
+            showTour = showGuidedTour && !isPlacingDecoration,
+            buttonBounds = buttonBounds,
+            onTourComplete = {
+                showGuidedTour = false
+            },
             modifier = Modifier.fillMaxSize()
         )
 

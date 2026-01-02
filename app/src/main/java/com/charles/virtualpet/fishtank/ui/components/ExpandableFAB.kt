@@ -24,7 +24,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -38,21 +41,24 @@ data class FABAction(
 @Composable
 fun ExpandableFAB(
     actions: List<FABAction>,
+    onButtonBoundsCaptured: ((String, Rect) -> Unit)? = null,
+    forceExpanded: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val isExpanded = expanded || forceExpanded
     
     Box(
         modifier = modifier.fillMaxSize()
     ) {
         // Backdrop overlay when expanded
         val backdropAlpha by animateFloatAsState(
-            targetValue = if (expanded) 0.3f else 0f,
+            targetValue = if (isExpanded) 0.3f else 0f,
             animationSpec = tween(durationMillis = 300),
             label = "backdrop_alpha"
         )
         
-        if (expanded || backdropAlpha > 0f) {
+        if (isExpanded || backdropAlpha > 0f) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -65,18 +71,18 @@ fun ExpandableFAB(
         // Sub-actions (appear when expanded)
         actions.forEachIndexed { index, action ->
             val offsetY by animateFloatAsState(
-                targetValue = if (expanded) -(70f * (index + 1)) else 0f,
+                targetValue = if (isExpanded) -(70f * (index + 1)) else 0f,
                 animationSpec = tween(durationMillis = 300),
                 label = "fab_offset_$index"
             )
             
             val alpha by animateFloatAsState(
-                targetValue = if (expanded) 1f else 0f,
+                targetValue = if (isExpanded) 1f else 0f,
                 animationSpec = tween(durationMillis = 300),
                 label = "fab_alpha_$index"
             )
             
-            if (expanded || alpha > 0f) {
+            if (isExpanded || alpha > 0f) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
@@ -109,7 +115,25 @@ fun ExpandableFAB(
                             expanded = false
                         },
                         shape = CircleShape,
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        modifier = Modifier.onGloballyPositioned { coordinates ->
+                            val topLeft = coordinates.localToRoot(Offset.Zero)
+                            val bottomRight = coordinates.localToRoot(
+                                Offset(
+                                    coordinates.size.width.toFloat(),
+                                    coordinates.size.height.toFloat()
+                                )
+                            )
+                            onButtonBoundsCaptured?.invoke(
+                                action.label,
+                                Rect(
+                                    left = topLeft.x,
+                                    top = topLeft.y,
+                                    right = bottomRight.x,
+                                    bottom = bottomRight.y
+                                )
+                            )
+                        }
                     ) {
                         if (action.iconRes != null) {
                             Image(
@@ -138,7 +162,7 @@ fun ExpandableFAB(
             containerColor = MaterialTheme.colorScheme.primary
         ) {
             Text(
-                text = if (expanded) "✕" else "☰",
+                text = if (isExpanded) "✕" else "☰",
                 style = MaterialTheme.typography.titleLarge
             )
         }

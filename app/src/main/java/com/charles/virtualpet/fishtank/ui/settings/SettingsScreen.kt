@@ -108,6 +108,7 @@ fun SettingsScreen(
     sfxManager: SfxManager?,
     bgMusicManager: BackgroundMusicManager?,
     onBack: () -> Unit,
+    onReplayTutorial: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val gameState by viewModel.gameState.collectAsStateWithLifecycle()
@@ -249,6 +250,12 @@ fun SettingsScreen(
                 onBgMusicToggle = { enabled ->
                     viewModel.updateBgMusicSettings(enabled)
                 },
+                modifier = Modifier.padding(bottom = 20.dp)
+            )
+
+            // Tutorial Card
+            TutorialCard(
+                onReplayTutorial = onReplayTutorial,
                 modifier = Modifier.padding(bottom = 20.dp)
             )
 
@@ -837,6 +844,76 @@ private fun BackgroundMusicCard(
                             color = Color.White
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TutorialCard(
+    onReplayTutorial: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Transparent
+        )
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(PastelPurple, PastelPink)
+                    ),
+                    shape = RoundedCornerShape(20.dp)
+                )
+                .padding(24.dp)
+        ) {
+            Column {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.padding(bottom = 12.dp)
+                ) {
+                    Text(
+                        text = "📚",
+                        style = MaterialTheme.typography.displaySmall
+                    )
+                    Column {
+                        Text(
+                            text = "Tutorial",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Text(
+                            text = "Go through the tutorial again",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.White.copy(alpha = 0.9f)
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Button(
+                    onClick = onReplayTutorial,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = Color.White.copy(alpha = 0.3f)
+                    )
+                ) {
+                    Text(
+                        text = "Replay Tutorial",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
                 }
             }
         }

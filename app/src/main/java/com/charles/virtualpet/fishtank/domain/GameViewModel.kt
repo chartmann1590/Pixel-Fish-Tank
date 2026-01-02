@@ -507,6 +507,19 @@ class GameViewModel(
             updatedState
         }
     }
+
+    fun completeTutorial() {
+        _gameState.update { currentState ->
+            val state = currentState ?: GameState()
+            val updatedState = state.copy(
+                settings = state.settings.copy(
+                    hasCompletedTutorial = true
+                )
+            )
+            saveState(updatedState)
+            updatedState
+        }
+    }
 }
 
 

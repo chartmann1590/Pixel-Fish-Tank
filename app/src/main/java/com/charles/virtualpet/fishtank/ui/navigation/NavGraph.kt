@@ -24,8 +24,13 @@ import com.charles.virtualpet.fishtank.ui.settings.SettingsScreen
 import com.charles.virtualpet.fishtank.ui.store.DecorationPlacementScreen
 import com.charles.virtualpet.fishtank.ui.store.DecorationStoreScreen
 import com.charles.virtualpet.fishtank.ui.tank.TankScreen
+import com.charles.virtualpet.fishtank.ui.tutorial.TutorialOnboardingScreen
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 sealed class Screen(val route: String) {
+    object Tutorial : Screen("tutorial")
     object Tank : Screen("tank")
     object MiniGameHub : Screen("minigame_hub")
     object BubblePop : Screen("bubble_pop")
@@ -47,11 +52,51 @@ fun NavGraph(
     sfxManager: SfxManager?,
     bgMusicManager: BackgroundMusicManager?
 ) {
+    val gameState by viewModel.gameState.collectAsStateWithLifecycle()
+    val hasCompletedTutorial = gameState.settings.hasCompletedTutorial
+    
+    // Determine start destination based on tutorial completion
+    val startDestination = if (hasCompletedTutorial) {
+        Screen.Tank.route
+    } else {
+        Screen.Tutorial.route
+    }
+    
+    // Navigate to tutorial if not completed (handles case where user navigates away and comes back)
+    LaunchedEffect(hasCompletedTutorial) {
+        if (!hasCompletedTutorial && navController.currentDestination?.route != Screen.Tutorial.route) {
+            navController.navigate(Screen.Tutorial.route) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
+    
     NavHost(
         navController = navController,
-        startDestination = Screen.Tank.route
+        startDestination = startDestination
     ) {
+        composable(Screen.Tutorial.route) {
+            // Check if this is a replay (coming from Settings)
+            val isReplay = navController.previousBackStackEntry?.destination?.route == Screen.Settings.route
+            
+            TutorialOnboardingScreen(
+                onComplete = {
+                    if (!isReplay) {
+                        // Only mark as completed if it's the first time
+                        viewModel.completeTutorial()
+                    }
+                    navController.navigate(Screen.Tank.route) {
+                        popUpTo(Screen.Tutorial.route) { inclusive = true }
+                    }
+                },
+                isReplay = isReplay
+            )
+        }
+        
         composable(Screen.Tank.route) {
+            // Check if we're coming from tutorial to show guided tour
+            val showGuidedTour = navController.previousBackStackEntry?.destination?.route == Screen.Tutorial.route
+            
             TankScreen(
                 viewModel = viewModel,
                 sfxManager = sfxManager,
@@ -67,7 +112,8 @@ fun NavGraph(
                 },
                 onNavigateToSettings = {
                     navController.navigate(Screen.Settings.route)
-                }
+                },
+                showGuidedTourOnStart = showGuidedTour
             )
         }
         
@@ -215,6 +261,9 @@ fun NavGraph(
                 bgMusicManager = bgMusicManager,
                 onBack = {
                     navController.popBackStack()
+                },
+                onReplayTutorial = {
+                    navController.navigate(Screen.Tutorial.route)
                 }
             )
         }

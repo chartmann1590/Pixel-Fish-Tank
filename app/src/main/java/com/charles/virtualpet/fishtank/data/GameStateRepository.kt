@@ -64,6 +64,7 @@ class GameStateRepository(private val context: Context) {
         val SFX_ENABLED = booleanPreferencesKey("sfx_enabled")
         val BG_MUSIC_ENABLED = booleanPreferencesKey("bg_music_enabled")
         val LAST_BACKUP_EPOCH = longPreferencesKey("last_backup_epoch")
+        val HAS_COMPLETED_TUTORIAL = booleanPreferencesKey("has_completed_tutorial")
     }
 
     val gameState: Flow<GameState> = context.dataStore.data.map { preferences ->
@@ -117,6 +118,7 @@ class GameStateRepository(private val context: Context) {
             preferences[Keys.QUIET_HOURS_END] = gameState.settings.quietHoursEnd
             preferences[Keys.SFX_ENABLED] = gameState.settings.sfxEnabled
             preferences[Keys.BG_MUSIC_ENABLED] = gameState.settings.bgMusicEnabled
+            preferences[Keys.HAS_COMPLETED_TUTORIAL] = gameState.settings.hasCompletedTutorial
         }
     }
 
@@ -310,7 +312,8 @@ class GameStateRepository(private val context: Context) {
             quietHoursStart = preferences[Keys.QUIET_HOURS_START] ?: "22:00",
             quietHoursEnd = preferences[Keys.QUIET_HOURS_END] ?: "08:00",
             sfxEnabled = preferences[Keys.SFX_ENABLED] ?: true,
-            bgMusicEnabled = preferences[Keys.BG_MUSIC_ENABLED] ?: true
+            bgMusicEnabled = preferences[Keys.BG_MUSIC_ENABLED] ?: true,
+            hasCompletedTutorial = preferences[Keys.HAS_COMPLETED_TUTORIAL] ?: false
         )
     }
 
