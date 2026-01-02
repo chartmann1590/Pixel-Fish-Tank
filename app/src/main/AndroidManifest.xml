@@ -34,6 +34,48 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+        
+        <!-- Widget Receivers -->
+        <receiver
+            android:name=".widgets.FishStatusWidgetSmallReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/fish_status_widget_small_info" />
+        </receiver>
+        <receiver
+            android:name=".widgets.FishStatusWidgetMediumReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/fish_status_widget_medium_info" />
+        </receiver>
+        <receiver
+            android:name=".widgets.StreakWidgetReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/streak_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".widgets.DailyTasksWidgetReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/daily_tasks_widget_info" />
+        </receiver>
     </application>
 
 </manifest>

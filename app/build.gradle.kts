@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.20"
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
 }
@@ -79,6 +80,13 @@ dependencies {
 
     // DataStore
     implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+    // Glance (Widgets)
+    implementation("androidx.glance:glance-appwidget:1.0.0")
+    implementation("androidx.glance:glance-material3:1.0.0")
+
+    // Serialization
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))

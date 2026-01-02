@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <!-- Header with fish and mood -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:id="@+id/widget_fish_image"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/fish_starter"
+            android:contentDescription="Fish" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/widget_mood_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="😊 Happy"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#90D5B4" />
+
+            <TextView
+                android:id="@+id/widget_level_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Level 5"
+                android:textSize="12sp"
+                android:textColor="#7F8C8D" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Stats section with progress bars -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="8dp">
+
+        <!-- Hunger -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🍎"
+                android:textSize="14sp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Hunger"
+                android:textSize="12sp"
+                android:textColor="#2C3E50"
+                android:layout_marginStart="6dp" />
+
+            <TextView
+                android:id="@+id/widget_hunger_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="75%"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="#90D5B4" />
+        </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/widget_hunger_bar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="10dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="6dp"
+            android:progressDrawable="@drawable/widget_progress_bar_good"
+            android:progress="75"
+            android:max="100" />
+
+        <!-- Clean -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🧽"
+                android:textSize="14sp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Clean"
+                android:textSize="12sp"
+                android:textColor="#2C3E50"
+                android:layout_marginStart="6dp" />
+
+            <TextView
+                android:id="@+id/widget_clean_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="80%"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="#90D5B4" />
+        </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/widget_clean_bar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="10dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="6dp"
+            android:progressDrawable="@drawable/widget_progress_bar_good"
+            android:progress="80"
+            android:max="100" />
+
+        <!-- Happy -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="❤️"
+                android:textSize="14sp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Happy"
+                android:textSize="12sp"
+                android:textColor="#2C3E50"
+                android:layout_marginStart="6dp" />
+
+            <TextView
+                android:id="@+id/widget_happy_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="90%"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="#90D5B4" />
+        </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/widget_happy_bar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="10dp"
+            android:layout_marginTop="2dp"
+            android:progressDrawable="@drawable/widget_progress_bar_good"
+            android:progress="90"
+            android:max="100" />
+    </LinearLayout>
+
+    <!-- Footer -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="6dp">
+
+        <TextView
+            android:id="@+id/widget_xp_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="⭐ XP 234"
+            android:textSize="11sp"
+            android:textColor="#7F8C8D" />
+
+        <TextView
+            android:id="@+id/widget_coins_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="💰 123"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#6BB6FF" />
+    </LinearLayout>
+
+</LinearLayout>

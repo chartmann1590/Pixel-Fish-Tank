@@ -12,7 +12,7 @@ class GameViewModelFactory(
         if (modelClass.isAssignableFrom(GameViewModel::class.java)) {
             val repository = GameStateRepository(context)
             @Suppress("UNCHECKED_CAST")
-            return GameViewModel(repository) as T
+            return GameViewModel(context.applicationContext as android.app.Application, repository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

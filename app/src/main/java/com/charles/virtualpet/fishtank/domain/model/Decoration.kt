@@ -15,7 +15,8 @@ enum class DecorationType {
 }
 
 data class PlacedDecoration(
-    val decorationId: String,
+    val id: String, // Unique ID for this placed decoration instance
+    val decorationId: String, // The decoration type ID
     val x: Float, // Position as percentage (0.0 to 1.0)
     val y: Float  // Position as percentage (0.0 to 1.0)
 )

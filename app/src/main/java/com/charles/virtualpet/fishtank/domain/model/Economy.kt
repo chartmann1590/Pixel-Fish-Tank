@@ -8,7 +8,8 @@ data class Economy(
 data class InventoryItem(
     val id: String,
     val name: String,
-    val type: ItemType
+    val type: ItemType,
+    val quantity: Int = 1
 )
 
 enum class ItemType {

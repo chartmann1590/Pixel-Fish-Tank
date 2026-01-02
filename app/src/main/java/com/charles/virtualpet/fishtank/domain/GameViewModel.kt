@@ -1,6 +1,7 @@
 package com.charles.virtualpet.fishtank.domain
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.charles.virtualpet.fishtank.data.GameStateRepository
 import com.charles.virtualpet.fishtank.domain.model.Decoration
@@ -8,6 +9,7 @@ import com.charles.virtualpet.fishtank.domain.model.GameState
 import com.charles.virtualpet.fishtank.domain.model.InventoryItem
 import com.charles.virtualpet.fishtank.domain.model.ItemType
 import com.charles.virtualpet.fishtank.domain.model.PlacedDecoration
+import com.charles.virtualpet.fishtank.widgets.WidgetUpdateHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,8 +20,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class GameViewModel(
+    application: Application,
     private val repository: GameStateRepository
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     private val _gameState = MutableStateFlow<GameState?>(null)
     val gameState: StateFlow<GameState> = _gameState.asStateFlow()
@@ -95,6 +98,10 @@ class GameViewModel(
                 dailyTasks = taskResult.tasks
             )
             saveState(updatedState)
+            // Update widgets after state change
+            viewModelScope.launch {
+                WidgetUpdateHelper.updateAllWidgets(getApplication())
+            }
             updatedState
         }
     }
@@ -133,6 +140,10 @@ class GameViewModel(
                 dailyTasks = taskResult.tasks
             )
             saveState(updatedState)
+            // Update widgets after state change
+            viewModelScope.launch {
+                WidgetUpdateHelper.updateAllWidgets(getApplication())
+            }
             updatedState
         }
     }
@@ -146,6 +157,10 @@ class GameViewModel(
                 )
             )
             saveState(updatedState)
+            // Update widgets after state change (minigame completion)
+            viewModelScope.launch {
+                WidgetUpdateHelper.updateAllWidgets(getApplication())
+            }
             updatedState
         }
     }
@@ -171,6 +186,10 @@ class GameViewModel(
                 )
             )
             saveState(updatedState)
+            // Update widgets after state change (minigame completion)
+            viewModelScope.launch {
+                WidgetUpdateHelper.updateAllWidgets(getApplication())
+            }
             updatedState
         }
     }
@@ -181,11 +200,25 @@ class GameViewModel(
             val currentCoins = state.economy.coins
             
             if (currentCoins >= decoration.price) {
-                val newInventory = state.economy.inventoryItems + InventoryItem(
-                    id = decoration.id,
-                    name = decoration.name,
-                    type = ItemType.DECORATION
-                )
+                val existingItem = state.economy.inventoryItems.find { it.id == decoration.id }
+                val newInventory = if (existingItem != null) {
+                    // Increment quantity if already owned
+                    state.economy.inventoryItems.map { item ->
+                        if (item.id == decoration.id) {
+                            item.copy(quantity = item.quantity + 1)
+                        } else {
+                            item
+                        }
+                    }
+                } else {
+                    // Add new item with quantity 1
+                    state.economy.inventoryItems + InventoryItem(
+                        id = decoration.id,
+                        name = decoration.name,
+                        type = ItemType.DECORATION,
+                        quantity = 1
+                    )
+                }
                 val updatedState = state.copy(
                     economy = state.economy.copy(
                         coins = currentCoins - decoration.price,
@@ -203,29 +236,73 @@ class GameViewModel(
     fun placeDecoration(decorationId: String, x: Float, y: Float) {
         _gameState.update { currentState ->
             val state = currentState ?: GameState()
+            
+            // Check if we have available quantity
+            val inventoryItem = state.economy.inventoryItems.find { it.id == decorationId }
+            if (inventoryItem == null || inventoryItem.quantity <= 0) {
+                return@update state // Can't place, no quantity available
+            }
+            
+            // Create placed decoration with unique ID
+            val placedId = java.util.UUID.randomUUID().toString()
             val newPlacedDecoration = PlacedDecoration(
+                id = placedId,
                 decorationId = decorationId,
                 x = x.coerceIn(0f, 1f),
                 y = y.coerceIn(0f, 1f)
             )
+            
+            // Decrement quantity
+            val updatedInventory = state.economy.inventoryItems.map { item ->
+                if (item.id == decorationId) {
+                    item.copy(quantity = item.quantity - 1)
+                } else {
+                    item
+                }
+            }
+            
             val updatedLayout = state.tankLayout.copy(
                 placedDecorations = state.tankLayout.placedDecorations + newPlacedDecoration
             )
-            val updatedState = state.copy(tankLayout = updatedLayout)
+            val updatedState = state.copy(
+                tankLayout = updatedLayout,
+                economy = state.economy.copy(inventoryItems = updatedInventory)
+            )
             saveState(updatedState)
             updatedState
         }
     }
 
-    fun removeDecoration(decorationId: String) {
+    fun removeDecoration(placedDecorationId: String) {
         _gameState.update { currentState ->
             val state = currentState ?: GameState()
+            
+            // Find the placed decoration to remove
+            val placedDecoration = state.tankLayout.placedDecorations.find { it.id == placedDecorationId }
+            if (placedDecoration == null) {
+                return@update state
+            }
+            
+            // Remove from placed decorations
             val updatedLayout = state.tankLayout.copy(
                 placedDecorations = state.tankLayout.placedDecorations.filter { 
-                    it.decorationId != decorationId 
+                    it.id != placedDecorationId 
                 }
             )
-            val updatedState = state.copy(tankLayout = updatedLayout)
+            
+            // Increment quantity back to inventory
+            val updatedInventory = state.economy.inventoryItems.map { item ->
+                if (item.id == placedDecoration.decorationId) {
+                    item.copy(quantity = item.quantity + 1)
+                } else {
+                    item
+                }
+            }
+            
+            val updatedState = state.copy(
+                tankLayout = updatedLayout,
+                economy = state.economy.copy(inventoryItems = updatedInventory)
+            )
             saveState(updatedState)
             updatedState
         }
@@ -311,4 +388,5 @@ class GameViewModel(
         }
     }
 }
+
 

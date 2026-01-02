@@ -5,5 +5,28 @@
     <color name="pastel_yellow">#FFE5B4</color>
     <color name="pastel_pink">#FFD1DC</color>
     <color name="pastel_purple">#E1C4FF</color>
+
+    <!-- Widget theme colors -->
+    <color name="widget_background">#E8F4F8</color>
+    <color name="widget_surface">#FFFFFF</color>
+    <color name="widget_primary">#6BB6FF</color>
+    <color name="widget_secondary">#90D5B4</color>
+
+    <!-- Widget mood colors -->
+    <color name="widget_mood_happy">#90D5B4</color>
+    <color name="widget_mood_neutral">#A8D5E2</color>
+    <color name="widget_mood_hungry">#FFE5B4</color>
+    <color name="widget_mood_dirty">#D4A5A5</color>
+    <color name="widget_mood_sad">#FFB3BA</color>
+
+    <!-- Widget stat colors -->
+    <color name="widget_stat_good">#90D5B4</color>
+    <color name="widget_stat_medium">#FFD1A8</color>
+    <color name="widget_stat_low">#FFB3BA</color>
+
+    <!-- Widget text colors -->
+    <color name="widget_text_primary">#2C3E50</color>
+    <color name="widget_text_secondary">#7F8C8D</color>
+    <color name="widget_text_light">#95A5A6</color>
 </resources>
 

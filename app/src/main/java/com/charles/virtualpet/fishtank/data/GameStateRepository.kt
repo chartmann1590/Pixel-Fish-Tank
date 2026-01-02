@@ -40,6 +40,9 @@ class GameStateRepository(private val context: Context) {
         val COINS = intPreferencesKey("coins")
         val INVENTORY_ITEMS = stringPreferencesKey("inventory_items")
         val MINIGAME_HIGH_SCORE = intPreferencesKey("minigame_high_score")
+        val BUBBLE_POP_HIGH_SCORE = intPreferencesKey("bubble_pop_high_score")
+        val TIMING_BAR_HIGH_SCORE = intPreferencesKey("timing_bar_high_score")
+        val CLEANUP_RUSH_HIGH_SCORE = intPreferencesKey("cleanup_rush_high_score")
         val TANK_LAYOUT = stringPreferencesKey("tank_layout")
         val DAILY_TASKS = stringPreferencesKey("daily_tasks")
         val LAST_RESET_DATE = stringPreferencesKey("last_reset_date")
@@ -48,6 +51,7 @@ class GameStateRepository(private val context: Context) {
         val LAST_COMPLETED_DATE = stringPreferencesKey("last_completed_date")
         val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
         val REMINDER_TIMES = stringPreferencesKey("reminder_times")
+        val LAST_BACKUP_EPOCH = longPreferencesKey("last_backup_epoch")
     }
 
     val gameState: Flow<GameState> = context.dataStore.data.map { preferences ->
@@ -107,6 +111,43 @@ class GameStateRepository(private val context: Context) {
             }
         }
     }
+    
+    fun getHighScore(type: com.charles.virtualpet.fishtank.ui.minigame.MiniGameType): Flow<Int> {
+        return context.dataStore.data.map { preferences ->
+            when (type) {
+                com.charles.virtualpet.fishtank.ui.minigame.MiniGameType.BUBBLE_POP -> 
+                    preferences[Keys.BUBBLE_POP_HIGH_SCORE] ?: 0
+                com.charles.virtualpet.fishtank.ui.minigame.MiniGameType.TIMING_BAR -> 
+                    preferences[Keys.TIMING_BAR_HIGH_SCORE] ?: 0
+                com.charles.virtualpet.fishtank.ui.minigame.MiniGameType.CLEANUP_RUSH -> 
+                    preferences[Keys.CLEANUP_RUSH_HIGH_SCORE] ?: 0
+            }
+        }
+    }
+    
+    suspend fun saveHighScore(type: com.charles.virtualpet.fishtank.ui.minigame.MiniGameType, score: Int) {
+        context.dataStore.edit { preferences ->
+            val key = when (type) {
+                com.charles.virtualpet.fishtank.ui.minigame.MiniGameType.BUBBLE_POP -> Keys.BUBBLE_POP_HIGH_SCORE
+                com.charles.virtualpet.fishtank.ui.minigame.MiniGameType.TIMING_BAR -> Keys.TIMING_BAR_HIGH_SCORE
+                com.charles.virtualpet.fishtank.ui.minigame.MiniGameType.CLEANUP_RUSH -> Keys.CLEANUP_RUSH_HIGH_SCORE
+            }
+            val currentHigh = preferences[key] ?: 0
+            if (score > currentHigh) {
+                preferences[key] = score
+            }
+        }
+    }
+    
+    val lastBackupTime: Flow<Long?> = context.dataStore.data.map { preferences ->
+        preferences[Keys.LAST_BACKUP_EPOCH]
+    }
+    
+    suspend fun updateLastBackupTime(epoch: Long) {
+        context.dataStore.edit { preferences ->
+            preferences[Keys.LAST_BACKUP_EPOCH] = epoch
+        }
+    }
 
     private fun serializeInventoryItems(items: List<InventoryItem>): String {
         if (items.isEmpty()) return "[]"
@@ -116,6 +157,7 @@ class GameStateRepository(private val context: Context) {
             jsonObject.put("id", item.id)
             jsonObject.put("name", item.name)
             jsonObject.put("type", item.type.name)
+            jsonObject.put("quantity", item.quantity)
             jsonArray.put(jsonObject)
         }
         return jsonArray.toString()
@@ -130,7 +172,8 @@ class GameStateRepository(private val context: Context) {
                 InventoryItem(
                     id = jsonObject.getString("id"),
                     name = jsonObject.getString("name"),
-                    type = ItemType.valueOf(jsonObject.getString("type"))
+                    type = ItemType.valueOf(jsonObject.getString("type")),
+                    quantity = jsonObject.optInt("quantity", 1) // Default to 1 for backward compatibility
                 )
             }
         } catch (e: Exception) {
@@ -143,6 +186,7 @@ class GameStateRepository(private val context: Context) {
         val jsonArray = JSONArray()
         layout.placedDecorations.forEach { placed ->
             val jsonObject = JSONObject()
+            jsonObject.put("id", placed.id)
             jsonObject.put("decorationId", placed.decorationId)
             jsonObject.put("x", placed.x.toDouble())
             jsonObject.put("y", placed.y.toDouble())
@@ -158,6 +202,7 @@ class GameStateRepository(private val context: Context) {
             val placedDecorations = (0 until jsonArray.length()).map { i ->
                 val jsonObject = jsonArray.getJSONObject(i)
                 PlacedDecoration(
+                    id = jsonObject.optString("id", java.util.UUID.randomUUID().toString()),
                     decorationId = jsonObject.getString("decorationId"),
                     x = jsonObject.getDouble("x").toFloat(),
                     y = jsonObject.getDouble("y").toFloat()

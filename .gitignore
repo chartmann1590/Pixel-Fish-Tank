@@ -95,3 +95,6 @@ crashlytics-build.properties
 crashlytics.properties
 crashlytics-wrapper.properties
 
+# Claude AI
+claude.md
+

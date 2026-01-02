@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background"
+    android:padding="8dp">
+
+    <ImageView
+        android:id="@+id/widget_fish_image"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignParentStart="true"
+        android:layout_centerVertical="true"
+        android:src="@drawable/fish_starter"
+        android:contentDescription="Fish" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@id/widget_fish_image"
+        android:layout_centerVertical="true"
+        android:layout_marginStart="8dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/widget_mood_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="😊 Happy"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#90D5B4" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="2dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🍎"
+                android:textSize="11sp" />
+
+            <ProgressBar
+                android:id="@+id/widget_hunger_bar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="60dp"
+                android:layout_height="8dp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:progressDrawable="@drawable/widget_progress_bar_good"
+                android:progress="75"
+                android:max="100" />
+
+            <TextView
+                android:id="@+id/widget_hunger_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="75%"
+                android:textSize="10sp"
+                android:textColor="#7F8C8D" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/widget_level_coins"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Lv.5  💰123"
+            android:textSize="10sp"
+            android:textColor="#7F8C8D"
+            android:layout_marginTop="2dp" />
+    </LinearLayout>
+
+</RelativeLayout>

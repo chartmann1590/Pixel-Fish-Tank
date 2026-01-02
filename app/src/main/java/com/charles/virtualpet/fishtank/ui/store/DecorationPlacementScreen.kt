@@ -12,11 +12,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
@@ -26,8 +29,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.charles.virtualpet.fishtank.ui.tank.TankDimensions
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -126,25 +131,17 @@ fun DecorationPlacementScreen(
                 }
             }
 
-            // Tank area for placement
+            // Tank area for placement - MUST MATCH MAIN SCREEN EXACTLY (fillMaxWidth, same height)
+            var containerSize by remember { mutableStateOf<IntSize?>(null) }
+            val density = LocalDensity.current
+            
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(400.dp)
+                    .height(TankDimensions.TANK_HEIGHT)
                     .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .pointerInput(Unit) {
-                        detectTapGestures { tapOffset ->
-                            if (selectedDecorationId != null) {
-                                val x = tapOffset.x / size.width.toFloat()
-                                val y = tapOffset.y / size.height.toFloat()
-                                viewModel.placeDecoration(selectedDecorationId!!, x, y)
-                                // Complete decorate task if this is first placement
-                                if (placedDecorations.isEmpty()) {
-                                    viewModel.completeDecorateTask()
-                                }
-                                selectedDecorationId = null
-                            }
-                        }
+                    .onSizeChanged { size ->
+                        containerSize = size
                     }
             ) {
                 // Tank background
@@ -154,8 +151,30 @@ fun DecorationPlacementScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
-
-                // Placed decorations
+                
+                // Tap detection overlay - covers entire container
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pointerInput(Unit) {
+                            detectTapGestures { tapOffset ->
+                                if (selectedDecorationId != null) {
+                                    // tapOffset is relative to THIS Box, size is the size of THIS Box
+                                    // Use size from pointerInput block - this matches the actual tap area
+                                    val x = (tapOffset.x / size.width.toFloat()).coerceIn(0f, 1f)
+                                    val y = (tapOffset.y / size.height.toFloat()).coerceIn(0f, 1f)
+                                    viewModel.placeDecoration(selectedDecorationId!!, x, y)
+                                    // Complete decorate task if this is first placement
+                                    if (placedDecorations.isEmpty()) {
+                                        viewModel.completeDecorateTask()
+                                    }
+                                    selectedDecorationId = null
+                                }
+                            }
+                        }
+                )
+                
+                // Placed decorations - use FIXED dimensions matching main screen
                 placedDecorations.forEach { placed ->
                     val decoration = DecorationStore.getDecorationById(placed.decorationId)
                     if (decoration != null) {
@@ -166,8 +185,13 @@ fun DecorationPlacementScreen(
                             else -> R.drawable.decoration_plant
                         }
                         
-                        val decorationSize = 48.dp
-                        val tankHeight = 400.dp
+                        val decorationSize = 40.dp
+                        
+                        // Use ACTUAL measured container size from parent Box - must match what tap used
+                        val containerWidthPx = containerSize?.width?.toFloat() ?: with(density) { TankDimensions.TANK_WIDTH.toPx() }
+                        val containerHeightPx = containerSize?.height?.toFloat() ?: with(density) { TankDimensions.TANK_HEIGHT.toPx() }
+                        val xPos = placed.x * containerWidthPx
+                        val yPos = placed.y * containerHeightPx
                         
                         Image(
                             painter = painterResource(id = imageResId),
@@ -175,11 +199,11 @@ fun DecorationPlacementScreen(
                             modifier = Modifier
                                 .size(decorationSize)
                                 .offset(
-                                    x = (placed.x * 400.dp.value).dp - decorationSize / 2,
-                                    y = (placed.y * tankHeight.value).dp - decorationSize / 2
+                                    x = with(density) { (xPos - decorationSize.toPx() / 2).toDp() },
+                                    y = with(density) { (yPos - decorationSize.toPx() / 2).toDp() }
                                 )
                                 .clickable {
-                                    viewModel.removeDecoration(placed.decorationId)
+                                    viewModel.removeDecoration(placed.id)
                                 }
                         )
                     }

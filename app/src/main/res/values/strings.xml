@@ -15,5 +15,9 @@
     <string name="mood_hungry">Hungry</string>
     <string name="mood_dirty">Dirty Tank</string>
     <string name="mood_sad">Sad</string>
+    <string name="widget_small_description">Quick fish status</string>
+    <string name="widget_medium_description">Detailed fish status</string>
+    <string name="widget_streak_description">Daily streak counter</string>
+    <string name="widget_daily_tasks_description">Today\'s tasks</string>
 </resources>
 
