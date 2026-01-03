@@ -12,7 +12,7 @@ Watch Pixel Fish Tank in action! See all the features, gameplay, and adorable pi
 
 <div align="center">
   
-<iframe width="800" height="450" src="https://www.youtube.com/embed/XK6H-mTGFZg" title="Pixel Fish Tank Promo Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+[![Pixel Fish Tank Promo Video](assets/feature/feature.png)](https://youtu.be/XK6H-mTGFZg)
 
 </div>
 
