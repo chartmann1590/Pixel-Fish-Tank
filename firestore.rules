@@ -1,0 +1,15 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /store_items/{itemId} {
+      allow read: if true;
+      // Allow writes - admin panel is password protected
+      allow write: if true;
+    }
+    match /purchases/{purchaseId} {
+      allow read: if true;
+      allow create: if true; // App can create purchases
+      allow update, delete: if false; // Only admin can modify
+    }
+  }
+}

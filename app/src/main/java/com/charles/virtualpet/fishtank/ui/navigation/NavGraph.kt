@@ -49,6 +49,7 @@ fun NavGraph(
     navController: NavHostController,
     viewModel: GameViewModel,
     repository: GameStateRepository,
+    storeRepository: com.charles.virtualpet.fishtank.data.FirebaseStoreRepository?,
     sfxManager: SfxManager?,
     bgMusicManager: BackgroundMusicManager?
 ) {
@@ -238,6 +239,7 @@ fun NavGraph(
         composable(Screen.DecorationStore.route) {
             DecorationStoreScreen(
                 viewModel = viewModel,
+                repository = storeRepository,
                 onBack = {
                     navController.popBackStack()
                 }

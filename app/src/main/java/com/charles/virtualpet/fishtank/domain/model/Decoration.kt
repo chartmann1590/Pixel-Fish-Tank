@@ -4,6 +4,7 @@ data class Decoration(
     val id: String,
     val name: String,
     val drawableRes: String, // Resource name like "decoration_plant"
+    val imageUrl: String? = null, // Firebase Storage URL
     val price: Int,
     val type: DecorationType
 )

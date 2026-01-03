@@ -2,7 +2,6 @@ package com.charles.virtualpet.fishtank.ui.store
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,17 +17,25 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,18 +48,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.charles.virtualpet.fishtank.R
-import com.charles.virtualpet.fishtank.data.DecorationStore
+import com.charles.virtualpet.fishtank.data.FirebaseStoreRepository
+import com.charles.virtualpet.fishtank.data.ImageCacheManager
+import com.charles.virtualpet.fishtank.data.SyncState
 import com.charles.virtualpet.fishtank.domain.GameViewModel
 import com.charles.virtualpet.fishtank.domain.model.Decoration
+import com.charles.virtualpet.fishtank.ui.components.CachedImage
 import com.charles.virtualpet.fishtank.ui.theme.PastelBlue
 import com.charles.virtualpet.fishtank.ui.theme.PastelGreen
 import com.charles.virtualpet.fishtank.ui.theme.PastelPink
 import com.charles.virtualpet.fishtank.ui.theme.PastelPurple
 import com.charles.virtualpet.fishtank.ui.theme.PastelYellow
+import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 
 @Composable
 fun DecorationStoreScreen(
     viewModel: GameViewModel,
+    repository: FirebaseStoreRepository?,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -61,7 +74,46 @@ fun DecorationStoreScreen(
     val ownedDecorations = gameState.economy.inventoryItems
         .filter { it.type == com.charles.virtualpet.fishtank.domain.model.ItemType.DECORATION }
         .associateBy { it.id }
-
+    
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    
+    // Get store items (unified list)
+    val allStoreItems by if (repository != null) {
+        repository.getAllStoreItems().collectAsStateWithLifecycle(
+            initialValue = com.charles.virtualpet.fishtank.data.DecorationStore.availableDecorations
+        )
+    } else {
+        remember { mutableStateOf(com.charles.virtualpet.fishtank.data.DecorationStore.availableDecorations) }
+    }
+    
+    // Sync state
+    val syncState by repository?.syncState?.collectAsStateWithLifecycle() ?: remember { mutableStateOf<SyncState>(SyncState.Idle) }
+    val hasMoreItems by repository?.hasMoreItems?.collectAsStateWithLifecycle() ?: remember { mutableStateOf(false) }
+    val isLoadingMore by repository?.isLoadingMore?.collectAsStateWithLifecycle() ?: remember { mutableStateOf(false) }
+    
+    // Last sync timestamp
+    var lastSyncTimestamp by remember { mutableStateOf<Long?>(null) }
+    
+    LaunchedEffect(repository) {
+        repository?.getLastSyncTimestamp()?.let { timestamp ->
+            lastSyncTimestamp = timestamp
+        }
+    }
+    
+    // Update timestamp when sync succeeds
+    LaunchedEffect(syncState) {
+        if (syncState is SyncState.Success) {
+            lastSyncTimestamp = (syncState as SyncState.Success).timestamp
+        } else if (syncState is SyncState.Error) {
+            val error = syncState as SyncState.Error
+            snackbarHostState.showSnackbar(
+                message = error.message,
+                duration = androidx.compose.material3.SnackbarDuration.Short
+            )
+        }
+    }
+    
     // Animated background gradient
     val gradient = Brush.verticalGradient(
         colors = listOf(
@@ -71,7 +123,9 @@ fun DecorationStoreScreen(
             MaterialTheme.colorScheme.background
         )
     )
-
+    
+    val listState = rememberLazyListState()
+    
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -91,53 +145,140 @@ fun DecorationStoreScreen(
                 ),
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
-                Row(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(20.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                        .padding(20.dp)
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "🎨 Decoration Store",
-                            style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Customize your tank!",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                        )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "🎨 Decoration Store",
+                                style = MaterialTheme.typography.displaySmall,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Customize your tank!",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                            )
+                        }
+                        
+                        // Refresh button
+                        IconButton(
+                            onClick = {
+                                scope.launch {
+                                    repository?.refresh()
+                                }
+                            },
+                            enabled = syncState !is SyncState.Loading
+                        ) {
+                            if (syncState is SyncState.Loading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Icon(
+                                    painter = painterResource(id = android.R.drawable.ic_menu_rotate),
+                                    contentDescription = "Refresh",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                        
+                        // Coin display with gradient background
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    brush = Brush.horizontalGradient(
+                                        colors = listOf(PastelYellow, PastelPink)
+                                    ),
+                                    shape = RoundedCornerShape(16.dp)
+                                )
+                                .padding(horizontal = 16.dp, vertical = 12.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = "💰",
+                                    style = MaterialTheme.typography.titleLarge
+                                )
+                                Text(
+                                    text = "$coins",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
                     }
                     
-                    // Coin display with gradient background
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                brush = Brush.horizontalGradient(
-                                    colors = listOf(PastelYellow, PastelPink)
-                                ),
-                                shape = RoundedCornerShape(16.dp)
-                            )
-                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                    // Sync status and timestamp
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                text = "💰",
-                                style = MaterialTheme.typography.titleLarge
-                            )
-                            Text(
-                                text = "$coins",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
+                        when (syncState) {
+                            is SyncState.Loading -> {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    strokeWidth = 2.dp
+                                )
+                                Text(
+                                    text = "Syncing...",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                )
+                            }
+                            is SyncState.Success -> {
+                                Text(
+                                    text = "✓",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = PastelGreen
+                                )
+                                Text(
+                                    text = formatLastSyncTime(lastSyncTimestamp),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                )
+                            }
+                            is SyncState.Error -> {
+                                Text(
+                                    text = "⚠",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                                Text(
+                                    text = "Using cached data",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                )
+                            }
+                            else -> {
+                                lastSyncTimestamp?.let {
+                                    Text(
+                                        text = formatLastSyncTime(it),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                    )
+                                } ?: run {
+                                    Text(
+                                        text = "Never synced",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -147,10 +288,11 @@ fun DecorationStoreScreen(
 
             // Decoration list with enhanced spacing
             LazyColumn(
+                state = listState,
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                items(DecorationStore.availableDecorations) { decoration ->
+                items(allStoreItems) { decoration ->
                     val ownedItem = ownedDecorations[decoration.id]
                     val quantity = ownedItem?.quantity ?: 0
                     DecorationItem(
@@ -163,6 +305,36 @@ fun DecorationStoreScreen(
                             }
                         }
                     )
+                }
+                
+                // Load more button
+                if (hasMoreItems) {
+                    item {
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    repository?.loadMoreItems()
+                                }
+                            },
+                            enabled = !isLoadingMore,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            if (isLoadingMore) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.dp,
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                            }
+                            Text(
+                                text = if (isLoadingMore) "Loading..." else "Load More",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
             }
 
@@ -187,6 +359,12 @@ fun DecorationStoreScreen(
                 )
             }
         }
+        
+        // Snackbar for errors
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 
@@ -258,14 +436,7 @@ private fun DecorationItem(
                     .padding(20.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Decoration image with enhanced styling
-                val imageResId = when (decoration.drawableRes) {
-                    "decoration_plant" -> R.drawable.decoration_plant
-                    "decoration_rock" -> R.drawable.decoration_rock
-                    "decoration_toy" -> R.drawable.decoration_toy
-                    else -> R.drawable.decoration_plant
-                }
-                
+                // Decoration image with CachedImage
                 Box(
                     modifier = Modifier
                         .size(80.dp)
@@ -276,8 +447,9 @@ private fun DecorationItem(
                         .padding(8.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Image(
-                        painter = painterResource(id = imageResId),
+                    CachedImage(
+                        imageUrl = decoration.imageUrl,
+                        drawableRes = decoration.drawableRes,
                         contentDescription = decoration.name,
                         modifier = Modifier.size(64.dp),
                         contentScale = ContentScale.Fit
@@ -369,3 +541,20 @@ private fun DecorationItem(
     }
 }
 
+private fun formatLastSyncTime(timestamp: Long?): String {
+    if (timestamp == null) return "Never synced"
+    
+    val now = System.currentTimeMillis()
+    val diff = now - timestamp
+    
+    val minutes = TimeUnit.MILLISECONDS.toMinutes(diff)
+    val hours = TimeUnit.MILLISECONDS.toHours(diff)
+    val days = TimeUnit.MILLISECONDS.toDays(diff)
+    
+    return when {
+        minutes < 1 -> "Just now"
+        minutes < 60 -> "Last updated: $minutes minute${if (minutes > 1) "s" else ""} ago"
+        hours < 24 -> "Last updated: $hours hour${if (hours > 1) "s" else ""} ago"
+        else -> "Last updated: $days day${if (days > 1) "s" else ""} ago"
+    }
+}

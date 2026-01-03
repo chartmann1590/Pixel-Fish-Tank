@@ -16,8 +16,17 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.perf.FirebasePerformance
 import com.charles.virtualpet.fishtank.data.GameStateRepository
+import com.charles.virtualpet.fishtank.data.ImageCacheManager
+import com.charles.virtualpet.fishtank.data.FirebaseStoreRepository
+import com.charles.virtualpet.fishtank.data.workers.StoreSyncWorker
 import com.charles.virtualpet.fishtank.domain.GameViewModel
 import com.charles.virtualpet.fishtank.domain.GameViewModelFactory
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import java.util.concurrent.TimeUnit
 import com.charles.virtualpet.fishtank.audio.BackgroundMusicManager
 import com.charles.virtualpet.fishtank.audio.SfxManager
 import com.charles.virtualpet.fishtank.ui.navigation.NavGraph
@@ -37,6 +46,10 @@ class MainActivity : ComponentActivity() {
     private val notificationPrefs: NotificationPrefs by lazy { NotificationPrefs(applicationContext) }
     private val persistentNotificationManager = PersistentNotificationManager(this)
     private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    
+    // Store repository
+    private val imageCacheManager by lazy { ImageCacheManager(this) }
+    private val storeRepository by lazy { FirebaseStoreRepository(this, imageCacheManager) }
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,6 +80,17 @@ class MainActivity : ComponentActivity() {
         // Clean up old screenshots on app start
         ScreenshotFileStore.cleanupOldScreenshots(this)
         
+        // Register repository with DecorationStore for lookup
+        com.charles.virtualpet.fishtank.data.DecorationStore.setRepository(storeRepository)
+        
+        // Schedule store sync worker (15 minutes)
+        scheduleStoreSyncWorker()
+        
+        // Trigger immediate sync on app open
+        coroutineScope.launch {
+            storeRepository.syncStoreItems()
+        }
+        
         setContent {
             PixelFishTankTheme {
                 val viewModel: GameViewModel = viewModel(
@@ -79,6 +103,7 @@ class MainActivity : ComponentActivity() {
                     navController = navController,
                     viewModel = viewModel,
                     repository = repository,
+                    storeRepository = storeRepository,
                     sfxManager = sfxManager,
                     bgMusicManager = bgMusicManager
                 )
@@ -136,6 +161,25 @@ class MainActivity : ComponentActivity() {
         val action = intent.action
         // Actions open the app - user can manually feed/clean from the tank screen
         // Future enhancement: could auto-trigger feed/clean actions here
+    }
+    
+    private fun scheduleStoreSyncWorker() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+        
+        val workRequest = PeriodicWorkRequestBuilder<StoreSyncWorker>(
+            15, TimeUnit.MINUTES,
+            5, TimeUnit.MINUTES // Flex interval
+        )
+            .setConstraints(constraints)
+            .build()
+        
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "store_sync_work",
+            ExistingPeriodicWorkPolicy.KEEP,
+            workRequest
+        )
     }
 }
 

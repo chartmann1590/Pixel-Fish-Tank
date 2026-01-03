@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class GameViewModel(
     application: Application,
@@ -200,6 +201,30 @@ class GameViewModel(
         }
     }
 
+    fun increaseHappiness(amount: Float) {
+        _gameState.update { currentState ->
+            val state = currentState ?: GameState()
+            // Apply decay before action
+            val decayedFish = StatDecayCalculator.calculateDecay(state.fishState)
+            val newHappiness = (decayedFish.happiness + amount).coerceAtMost(100f)
+            
+            val updatedState = state.copy(
+                fishState = decayedFish.copy(
+                    happiness = newHappiness,
+                    lastUpdatedEpoch = System.currentTimeMillis()
+                )
+            )
+            saveState(updatedState)
+            // Update widgets after state change
+            viewModelScope.launch {
+                WidgetUpdateHelper.updateAllWidgets(getApplication())
+            }
+            // Update persistent notification
+            persistentNotificationManager.updateNotification(updatedState)
+            updatedState
+        }
+    }
+
     fun addXP(amount: Int) {
         _gameState.update { currentState ->
             val state = currentState ?: GameState()
@@ -257,9 +282,39 @@ class GameViewModel(
                     )
                 )
                 saveState(updatedState)
+                
+                // Track purchase in Firestore
+                trackPurchase(decoration)
+                
                 updatedState
             } else {
                 state
+            }
+        }
+    }
+    
+    private fun trackPurchase(decoration: Decoration) {
+        viewModelScope.launch {
+            try {
+                val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                val context = getApplication<android.app.Application>()
+                val androidId = android.provider.Settings.Secure.getString(
+                    context.contentResolver,
+                    android.provider.Settings.Secure.ANDROID_ID
+                ) ?: "unknown"
+                
+                val purchaseData = hashMapOf(
+                    "itemId" to decoration.id,
+                    "itemName" to decoration.name,
+                    "price" to decoration.price,
+                    "type" to decoration.type.name,
+                    "timestamp" to System.currentTimeMillis(),
+                    "userId" to androidId
+                )
+                firestore.collection("purchases").add(purchaseData).await()
+            } catch (e: Exception) {
+                // Silently fail - purchase tracking is not critical
+                android.util.Log.w("GameViewModel", "Failed to track purchase", e)
             }
         }
     }

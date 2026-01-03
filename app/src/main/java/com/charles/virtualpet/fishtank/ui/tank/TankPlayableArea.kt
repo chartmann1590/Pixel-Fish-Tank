@@ -1,6 +1,5 @@
 package com.charles.virtualpet.fishtank.ui.tank
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,13 +7,13 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.charles.virtualpet.fishtank.R
 import com.charles.virtualpet.fishtank.data.DecorationStore
 import com.charles.virtualpet.fishtank.domain.model.PlacedDecoration
+import com.charles.virtualpet.fishtank.ui.components.CachedImage
 import com.charles.virtualpet.fishtank.ui.components.FishDisplay
 import com.charles.virtualpet.fishtank.ui.components.FoodItem
 import com.charles.virtualpet.fishtank.domain.model.FishMood
@@ -47,12 +46,6 @@ fun TankPlayableArea(
             placedDecorations.forEach { placed ->
                 val decoration = DecorationStore.getDecorationById(placed.decorationId)
                 if (decoration != null) {
-                    val imageResId = when (decoration.drawableRes) {
-                        "decoration_plant" -> R.drawable.decoration_plant
-                        "decoration_rock" -> R.drawable.decoration_rock
-                        "decoration_toy" -> R.drawable.decoration_toy
-                        else -> R.drawable.decoration_plant
-                    }
                     
                     val decorationSize = 240.dp
                     
@@ -77,8 +70,9 @@ fun TankPlayableArea(
                         containerRelativeY >= -decorationSizePx / 2 && 
                         containerRelativeY <= containerSize.height + decorationSizePx / 2) {
                         
-                        Image(
-                            painter = painterResource(id = imageResId),
+                        CachedImage(
+                            imageUrl = decoration.imageUrl,
+                            drawableRes = decoration.drawableRes,
                             contentDescription = decoration.name,
                             modifier = Modifier
                                 .size(decorationSize)
@@ -88,7 +82,8 @@ fun TankPlayableArea(
                                 )
                                 .clickable {
                                     onRemoveDecoration(placed.id)
-                                }
+                                },
+                            contentScale = ContentScale.Fit
                         )
                     }
                 }

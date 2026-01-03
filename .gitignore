@@ -106,4 +106,8 @@ scripts/
 
 # Firebase
 .firebase/
+.firebaserc
+firebase.json
+# Note: firestore.rules and storage.rules are typically committed as they're security rules
+# firestore.indexes.json is also typically committed as it's index definitions
 

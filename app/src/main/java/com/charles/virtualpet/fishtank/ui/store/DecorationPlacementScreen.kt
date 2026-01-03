@@ -1,6 +1,5 @@
 package com.charles.virtualpet.fishtank.ui.store
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -33,6 +32,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.charles.virtualpet.fishtank.ui.tank.TankDimensions
+import androidx.compose.foundation.Image
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -45,6 +45,7 @@ import com.charles.virtualpet.fishtank.data.DecorationStore
 import com.charles.virtualpet.fishtank.domain.GameViewModel
 import com.charles.virtualpet.fishtank.domain.model.InventoryItem
 import com.charles.virtualpet.fishtank.domain.model.ItemType
+import com.charles.virtualpet.fishtank.ui.components.CachedImage
 
 @Composable
 fun DecorationPlacementScreen(
@@ -92,13 +93,6 @@ fun DecorationPlacementScreen(
                 items(ownedDecorations) { item ->
                     val decoration = DecorationStore.getDecorationById(item.id)
                     if (decoration != null) {
-                        val imageResId = when (decoration.drawableRes) {
-                            "decoration_plant" -> R.drawable.decoration_plant
-                            "decoration_rock" -> R.drawable.decoration_rock
-                            "decoration_toy" -> R.drawable.decoration_toy
-                            else -> R.drawable.decoration_plant
-                        }
-                        
                         val hasQuantity = item.quantity > 0
                         val isSelected = selectedDecorationId == decoration.id
                         
@@ -131,8 +125,9 @@ fun DecorationPlacementScreen(
                                     modifier = Modifier.fillMaxSize(),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Image(
-                                        painter = painterResource(id = imageResId),
+                                    CachedImage(
+                                        imageUrl = decoration.imageUrl,
+                                        drawableRes = decoration.drawableRes,
                                         contentDescription = decoration.name,
                                         modifier = Modifier
                                             .size(60.dp)
@@ -142,7 +137,8 @@ fun DecorationPlacementScreen(
                                                 } else {
                                                     Modifier
                                                 }
-                                            )
+                                            ),
+                                        contentScale = ContentScale.Fit
                                     )
                                     if (isSelected && hasQuantity) {
                                         Box(
@@ -242,13 +238,6 @@ fun DecorationPlacementScreen(
                 placedDecorations.forEach { placed ->
                     val decoration = DecorationStore.getDecorationById(placed.decorationId)
                     if (decoration != null) {
-                        val imageResId = when (decoration.drawableRes) {
-                            "decoration_plant" -> R.drawable.decoration_plant
-                            "decoration_rock" -> R.drawable.decoration_rock
-                            "decoration_toy" -> R.drawable.decoration_toy
-                            else -> R.drawable.decoration_plant
-                        }
-                        
                         val decorationSize = 40.dp
                         
                         // Use ACTUAL measured container size from parent Box - must match what tap used
@@ -257,8 +246,9 @@ fun DecorationPlacementScreen(
                         val xPos = placed.x * containerWidthPx
                         val yPos = placed.y * containerHeightPx
                         
-                        Image(
-                            painter = painterResource(id = imageResId),
+                        CachedImage(
+                            imageUrl = decoration.imageUrl,
+                            drawableRes = decoration.drawableRes,
                             contentDescription = decoration.name,
                             modifier = Modifier
                                 .size(decorationSize)

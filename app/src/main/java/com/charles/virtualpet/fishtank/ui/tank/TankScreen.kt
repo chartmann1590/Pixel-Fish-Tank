@@ -281,6 +281,10 @@ fun TankScreen(
                 radius = bubbleRadius,
                 speed = bubbleSpeed
             )
+            
+            // Increase happiness by random amount between 1-5 when bubble spawns
+            val happinessIncrease = (1..5).random().toFloat()
+            viewModel.increaseHappiness(happinessIncrease)
         }
     }
     
@@ -769,6 +773,10 @@ fun TankScreen(
                                 if (distance <= bubble.radius) {
                                     // Bubble clicked! Give coins and show reward
                                     viewModel.addCoins(bubble.coinValue)
+                                    
+                                    // Increase happiness by random amount between 1-5 when bubble is popped
+                                    val happinessIncrease = (1..5).random().toFloat()
+                                    viewModel.increaseHappiness(happinessIncrease)
                                     
                                     // Play bubble pop sound with throttle (max 10/second)
                                     val currentTime = System.currentTimeMillis()

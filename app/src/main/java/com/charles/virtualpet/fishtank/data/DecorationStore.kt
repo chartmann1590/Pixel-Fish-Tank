@@ -28,9 +28,23 @@ object DecorationStore {
             type = DecorationType.TOY
         )
     )
+    
+    // Optional repository reference for Firebase items
+    @Volatile
+    private var repository: FirebaseStoreRepository? = null
+    
+    fun setRepository(repo: FirebaseStoreRepository?) {
+        repository = repo
+    }
 
     fun getDecorationById(id: String): Decoration? {
-        return availableDecorations.find { it.id == id }
+        // Check hardcoded items first
+        availableDecorations.find { it.id == id }?.let { return it }
+        
+        // Check Firebase items if repository is available
+        repository?.getDecorationById(id)?.let { return it }
+        
+        return null
     }
 }
 
