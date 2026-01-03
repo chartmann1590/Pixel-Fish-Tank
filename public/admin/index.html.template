@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store Admin - Pixel Fish Tank</title>
+    <link rel="icon" type="image/png" href="../assets/icon/icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-container">
+            <div class="login-card">
+                <img src="../assets/icon/icon.png" alt="Pixel Fish Tank" class="login-icon">
+                <h1 class="pixel-text">Store Admin</h1>
+                <p class="login-subtitle">Enter password to access</p>
+                <form id="loginForm">
+                    <input type="password" id="passwordInput" placeholder="Password" required autofocus>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </form>
+                <p id="loginError" class="error-message"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="adminPanel" class="admin-panel" style="display: none;">
+        <!-- Header -->
+        <header class="admin-header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="header-brand">
+                        <img src="../assets/icon/icon.png" alt="Pixel Fish Tank" class="header-icon">
+                        <h1 class="pixel-text">Store Admin</h1>
+                    </div>
+                    <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <div class="container">
+                <!-- Tabs -->
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="items">Store Items</button>
+                    <button class="tab-btn" data-tab="purchases">Purchase History</button>
+                </div>
+
+                <!-- Store Items Tab -->
+                <div id="itemsTab" class="tab-content active">
+                    <div class="section-header">
+                        <h2 class="section-title pixel-text">Store Items</h2>
+                        <button id="addItemBtn" class="btn btn-primary">+ Add Item</button>
+                    </div>
+
+                    <!-- Items Grid -->
+                    <div id="itemsGrid" class="items-grid">
+                        <div class="loading">Loading items...</div>
+                    </div>
+                </div>
+
+                <!-- Purchase History Tab -->
+                <div id="purchasesTab" class="tab-content">
+                    <div class="section-header">
+                        <h2 class="section-title pixel-text">Purchase History</h2>
+                        <div class="stats">
+                            <div class="stat-card">
+                                <div class="stat-value" id="totalPurchases">0</div>
+                                <div class="stat-label">Total Purchases</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="totalRevenue">0</div>
+                                <div class="stat-label">Total Revenue (coins)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Purchases Table -->
+                    <div class="table-container">
+                        <table id="purchasesTable" class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Item</th>
+                                    <th>Price</th>
+                                    <th>User ID</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="4" class="loading">Loading purchases...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Item Modal -->
+    <div id="itemModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="pixel-text" id="modalTitle">Add Item</h2>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+            <form id="itemForm">
+                <div class="form-group">
+                    <label for="itemId">Item ID</label>
+                    <input type="text" id="itemId" required pattern="[a-z0-9_]+" placeholder="e.g., plant_2">
+                    <small>Lowercase letters, numbers, and underscores only</small>
+                </div>
+                <div class="form-group">
+                    <label for="itemName">Name</label>
+                    <input type="text" id="itemName" required placeholder="e.g., Exotic Plant">
+                </div>
+                <div class="form-group">
+                    <label for="itemType">Type</label>
+                    <select id="itemType" required>
+                        <option value="PLANT">Plant</option>
+                        <option value="ROCK">Rock</option>
+                        <option value="TOY">Toy</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="itemPrice">Price (coins)</label>
+                    <input type="number" id="itemPrice" required min="1" placeholder="e.g., 100">
+                </div>
+                <div class="form-group">
+                    <label for="itemOrderIndex">Order Index</label>
+                    <input type="number" id="itemOrderIndex" value="0" min="0" placeholder="0">
+                    <small>Lower numbers appear first</small>
+                </div>
+                <div class="form-group">
+                    <label for="itemDrawableRes">Drawable Resource (fallback)</label>
+                    <input type="text" id="itemDrawableRes" placeholder="e.g., decoration_plant">
+                    <small>Used if image fails to load</small>
+                </div>
+                <div class="form-group">
+                    <label for="itemImage">Image</label>
+                    <input type="file" id="itemImage" accept="image/*">
+                    <div id="imagePreview" class="image-preview"></div>
+                    <div id="currentImage" class="current-image"></div>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="itemActive" checked>
+                        Active (visible in store)
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveBtn">Save Item</button>
+                </div>
+                <div id="formError" class="error-message"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, onSnapshot, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            // SECURITY WARNING: Copy this file to index.html and replace YOUR_FIREBASE_API_KEY_HERE with your actual Firebase API key
+            // DO NOT commit index.html with actual API keys to git. Get this from Firebase Console > Project Settings
+            apiKey: "YOUR_FIREBASE_API_KEY_HERE",
+            projectId: "pixel-fish-tank",
+            storageBucket: "pixel-fish-tank.firebasestorage.app"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Make Firebase functions available globally
+        window.firebaseApp = app;
+        window.db = db;
+        window.firestore = {
+            collection,
+            getDocs,
+            addDoc,
+            updateDoc,
+            deleteDoc,
+            doc,
+            query,
+            orderBy,
+            onSnapshot,
+            getDoc,
+            setDoc
+        };
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>
+

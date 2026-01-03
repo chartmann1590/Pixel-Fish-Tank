@@ -113,3 +113,7 @@ storage.rules
 # Note: firestore.rules and storage.rules are typically committed as they're security rules
 # firestore.indexes.json is also typically committed as it's index definitions
 
+# Admin panel with sensitive credentials (use .template files instead)
+public/admin/script.js
+public/admin/index.html
+

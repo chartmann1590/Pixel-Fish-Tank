@@ -1,0 +1,454 @@
+// Password protection
+// SECURITY WARNING: Copy this file to script.js and replace 'CHANGE_THIS_PASSWORD' with your actual admin password
+// DO NOT commit script.js with actual passwords to git
+const ADMIN_PASSWORD = 'CHANGE_THIS_PASSWORD';
+const STORAGE_KEY = 'admin_authenticated';
+
+// Check authentication on load
+window.addEventListener('DOMContentLoaded', () => {
+    const isAuthenticated = sessionStorage.getItem(STORAGE_KEY) === 'true';
+    if (isAuthenticated) {
+        showAdminPanel();
+    } else {
+        showLoginScreen();
+    }
+});
+
+function showLoginScreen() {
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('adminPanel').style.display = 'none';
+}
+
+function showAdminPanel() {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
+    initializeAdmin();
+}
+
+// Login form
+document.getElementById('loginForm')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const password = document.getElementById('passwordInput').value;
+    const errorMsg = document.getElementById('loginError');
+    
+    if (password === ADMIN_PASSWORD) {
+        sessionStorage.setItem(STORAGE_KEY, 'true');
+        errorMsg.textContent = '';
+        showAdminPanel();
+    } else {
+        errorMsg.textContent = 'Incorrect password';
+        document.getElementById('passwordInput').value = '';
+    }
+});
+
+// Logout
+document.getElementById('logoutBtn')?.addEventListener('click', () => {
+    sessionStorage.removeItem(STORAGE_KEY);
+    showLoginScreen();
+});
+
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        
+        // Update active tab button
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        // Update active tab content
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.getElementById(`${tab}Tab`).classList.add('active');
+        
+        // Load data for active tab
+        if (tab === 'purchases') {
+            loadPurchases();
+        }
+    });
+});
+
+// Initialize admin panel
+let currentEditingId = null;
+let itemsUnsubscribe = null;
+
+async function initializeAdmin() {
+    // Wait for Firebase to be initialized
+    let retries = 0;
+    while ((!window.db || !window.firestore) && retries < 10) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        retries++;
+    }
+    
+    if (!window.db || !window.firestore) {
+        console.error('Firebase not initialized after waiting');
+        document.getElementById('itemsGrid').innerHTML = 
+            '<div class="loading">Error: Firebase not initialized. Please refresh the page.</div>';
+        return;
+    }
+    
+    loadItems();
+    setupItemModal();
+}
+
+// Load store items
+function loadItems() {
+    const itemsGrid = document.getElementById('itemsGrid');
+    itemsGrid.innerHTML = '<div class="loading">Loading items...</div>';
+    
+    if (!window.firestore || !window.db) {
+        itemsGrid.innerHTML = '<div class="loading">Firebase not initialized. Please refresh.</div>';
+        return;
+    }
+    
+    const { collection, query, orderBy, onSnapshot } = window.firestore;
+    const itemsRef = collection(window.db, 'store_items');
+    // Use only orderIndex for query (composite index not needed)
+    const q = query(itemsRef, orderBy('orderIndex', 'asc'));
+    
+    itemsUnsubscribe = onSnapshot(q, (snapshot) => {
+        const items = [];
+        snapshot.forEach(doc => {
+            items.push({ id: doc.id, ...doc.data() });
+        });
+        
+        // Sort by price in JavaScript (secondary sort)
+        items.sort((a, b) => {
+            if (a.orderIndex !== b.orderIndex) {
+                return (a.orderIndex || 0) - (b.orderIndex || 0);
+            }
+            return (a.price || 0) - (b.price || 0);
+        });
+        
+        displayItems(items);
+    }, (error) => {
+        console.error('Error loading items:', error);
+        itemsGrid.innerHTML = '<div class="loading">Error loading items</div>';
+    });
+}
+
+function displayItems(items) {
+    const itemsGrid = document.getElementById('itemsGrid');
+    
+    if (items.length === 0) {
+        itemsGrid.innerHTML = '<div class="loading">No items found. Add your first item!</div>';
+        return;
+    }
+    
+    itemsGrid.innerHTML = items.map(item => `
+        <div class="item-card">
+            <img src="${item.imageUrl || '../assets/decorations/Plant_Decoration.png'}" 
+                 alt="${item.name}" 
+                 class="item-image"
+                 onerror="this.src='../assets/decorations/Plant_Decoration.png'">
+            <div class="item-info">
+                <h3>${item.name}</h3>
+                <div class="item-details">
+                    <span><strong>ID:</strong> ${item.id}</span>
+                    <span><strong>Type:</strong> ${item.type}</span>
+                    <span><strong>Price:</strong> ${item.price} coins</span>
+                    <span><strong>Order:</strong> ${item.orderIndex || 0}</span>
+                </div>
+                <span class="item-status ${item.isActive ? 'active' : 'inactive'}">
+                    ${item.isActive ? 'Active' : 'Inactive'}
+                </span>
+            </div>
+            <div class="item-actions">
+                <button class="btn btn-secondary" onclick="editItem('${item.id}')">Edit</button>
+                <button class="btn btn-danger" onclick="deleteItem('${item.id}', '${item.name}')">Delete</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Setup item modal
+function setupItemModal() {
+    const modal = document.getElementById('itemModal');
+    const closeModal = document.getElementById('closeModal');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const addItemBtn = document.getElementById('addItemBtn');
+    const itemForm = document.getElementById('itemForm');
+    const imageInput = document.getElementById('itemImage');
+    
+    addItemBtn?.addEventListener('click', () => {
+        currentEditingId = null;
+        document.getElementById('modalTitle').textContent = 'Add Item';
+        itemForm.reset();
+        document.getElementById('imagePreview').innerHTML = '';
+        document.getElementById('currentImage').innerHTML = '';
+        document.getElementById('itemActive').checked = true;
+        modal.classList.add('active');
+    });
+    
+    closeModal?.addEventListener('click', () => {
+        modal.classList.remove('active');
+    });
+    
+    cancelBtn?.addEventListener('click', () => {
+        modal.classList.remove('active');
+    });
+    
+    imageInput?.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                document.getElementById('imagePreview').innerHTML = 
+                    `<img src="${event.target.result}" alt="Preview">`;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    itemForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await saveItem();
+    });
+}
+
+// Edit item
+async function editItem(itemId) {
+    if (!window.firestore || !window.db) {
+        alert('Firebase not initialized');
+        return;
+    }
+    
+    const { collection, doc, getDoc } = window.firestore;
+    const itemsRef = collection(window.db, 'store_items');
+    const itemDoc = doc(itemsRef, itemId);
+    
+    try {
+        const itemSnap = await getDoc(itemDoc);
+        
+        if (itemSnap.exists()) {
+            const item = itemSnap.data();
+            currentEditingId = itemId;
+            
+            document.getElementById('modalTitle').textContent = 'Edit Item';
+            document.getElementById('itemId').value = item.id;
+            document.getElementById('itemId').disabled = true;
+            document.getElementById('itemName').value = item.name;
+            document.getElementById('itemType').value = item.type;
+            document.getElementById('itemPrice').value = item.price;
+            document.getElementById('itemOrderIndex').value = item.orderIndex || 0;
+            document.getElementById('itemDrawableRes').value = item.drawableRes || '';
+            document.getElementById('itemActive').checked = item.isActive !== false;
+            
+            // Show current image
+            if (item.imageUrl) {
+                document.getElementById('currentImage').innerHTML = 
+                    `<p style="margin-bottom: 10px; color: var(--text-muted);">Current Image:</p>
+                     <img src="${item.imageUrl}" alt="Current">`;
+            } else {
+                document.getElementById('currentImage').innerHTML = '';
+            }
+            
+            document.getElementById('imagePreview').innerHTML = '';
+            document.getElementById('itemModal').classList.add('active');
+        }
+    } catch (error) {
+        console.error('Error loading item:', error);
+        alert('Error loading item');
+    }
+}
+
+// Save item
+async function saveItem() {
+    const formError = document.getElementById('formError');
+    const saveBtn = document.getElementById('saveBtn');
+    formError.textContent = '';
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+    
+    if (!window.firestore || !window.db) {
+        formError.textContent = 'Firebase not initialized. Please refresh the page.';
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Item';
+        return;
+    }
+    
+    try {
+        const { collection, doc, setDoc, getDoc } = window.firestore;
+        
+        const itemId = document.getElementById('itemId').value;
+        const itemName = document.getElementById('itemName').value;
+        const itemType = document.getElementById('itemType').value;
+        const itemPrice = parseInt(document.getElementById('itemPrice').value);
+        const itemOrderIndex = parseInt(document.getElementById('itemOrderIndex').value) || 0;
+        const itemDrawableRes = document.getElementById('itemDrawableRes').value;
+        const itemActive = document.getElementById('itemActive').checked;
+        const imageFile = document.getElementById('itemImage').files[0];
+        
+        let imageUrl = null;
+        
+        // Handle image upload using Imgur (free, no API key needed)
+        if (imageFile) {
+            try {
+                // Convert file to base64
+                const base64Image = await fileToBase64(imageFile);
+                const base64Data = base64Image.split(',')[1]; // Remove data:image/...;base64, prefix
+                
+                // Upload to Imgur anonymous API
+                const formData = new FormData();
+                formData.append('image', base64Data);
+                
+                const response = await fetch('https://api.imgur.com/3/image', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Client-ID 546c25a59c58ad7' // Imgur's public anonymous upload client ID
+                    },
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                if (result.success && result.data && result.data.link) {
+                    imageUrl = result.data.link;
+                } else {
+                    throw new Error(result.data?.error || 'Upload failed');
+                }
+            } catch (error) {
+                console.error('Error uploading image:', error);
+                formError.textContent = 'Error uploading image: ' + error.message + '. Please try again.';
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save Item';
+                return;
+            }
+        } else if (currentEditingId) {
+            // Keep existing image if not uploading new one
+            const oldItemDoc = doc(collection(window.db, 'store_items'), currentEditingId);
+            const oldItemSnap = await getDoc(oldItemDoc);
+            if (oldItemSnap.exists()) {
+                imageUrl = oldItemSnap.data().imageUrl;
+            }
+        }
+        
+        // Save to Firestore
+        const itemData = {
+            id: itemId,
+            name: itemName,
+            type: itemType,
+            price: itemPrice,
+            orderIndex: itemOrderIndex,
+            drawableRes: itemDrawableRes || `decoration_${itemType.toLowerCase()}`,
+            isActive: itemActive,
+            lastUpdated: Date.now()
+        };
+        
+        if (imageUrl) {
+            itemData.imageUrl = imageUrl;
+        }
+        
+        const itemRef = doc(collection(window.db, 'store_items'), itemId);
+        await setDoc(itemRef, itemData, { merge: true });
+        
+        // Close modal
+        document.getElementById('itemModal').classList.remove('active');
+        formError.textContent = '';
+    } catch (error) {
+        console.error('Error saving item:', error);
+        formError.textContent = 'Error saving item: ' + error.message;
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Item';
+    }
+}
+
+// Delete item
+async function deleteItem(itemId, itemName) {
+    if (!confirm(`Are you sure you want to delete "${itemName}"? This cannot be undone.`)) {
+        return;
+    }
+    
+    if (!window.firestore || !window.db) {
+        alert('Firebase not initialized');
+        return;
+    }
+    
+    try {
+        const { collection, doc, getDoc, deleteDoc } = window.firestore;
+        
+        // Get item to delete image
+        const itemRef = doc(collection(window.db, 'store_items'), itemId);
+        const itemSnap = await getDoc(itemRef);
+        
+        if (itemSnap.exists()) {
+            // Note: We can't delete images from Imgur (they're anonymous uploads)
+            // The images will remain on Imgur but won't be referenced anymore
+            
+            // Delete from Firestore
+            await deleteDoc(itemRef);
+        }
+    } catch (error) {
+        console.error('Error deleting item:', error);
+        alert('Error deleting item: ' + error.message);
+    }
+}
+
+// Load purchases
+async function loadPurchases() {
+    const tableBody = document.querySelector('#purchasesTable tbody');
+    tableBody.innerHTML = '<tr><td colspan="4" class="loading">Loading purchases...</td></tr>';
+    
+    if (!window.firestore || !window.db) {
+        tableBody.innerHTML = '<tr><td colspan="4" class="loading">Firebase not initialized</td></tr>';
+        return;
+    }
+    
+    try {
+        const { collection, getDocs, query, orderBy } = window.firestore;
+        const purchasesRef = collection(window.db, 'purchases');
+        const q = query(purchasesRef, orderBy('timestamp', 'desc'));
+        const snapshot = await getDocs(q);
+        
+        const purchases = [];
+        let totalRevenue = 0;
+        
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            purchases.push(data);
+            totalRevenue += data.price || 0;
+        });
+        
+        // Update stats
+        document.getElementById('totalPurchases').textContent = purchases.length;
+        document.getElementById('totalRevenue').textContent = totalRevenue.toLocaleString();
+        
+        // Display purchases
+        if (purchases.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="4" class="loading">No purchases yet</td></tr>';
+        } else {
+            tableBody.innerHTML = purchases.map(purchase => {
+                const date = new Date(purchase.timestamp);
+                return `
+                    <tr>
+                        <td>${date.toLocaleString()}</td>
+                        <td>${purchase.itemName || purchase.itemId}</td>
+                        <td>${purchase.price || 0} coins</td>
+                        <td>${purchase.userId || 'Unknown'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    } catch (error) {
+        console.error('Error loading purchases:', error);
+        tableBody.innerHTML = '<tr><td colspan="4" class="loading">Error loading purchases</td></tr>';
+    }
+}
+
+// Helper function to convert file to base64
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+// Make functions globally available
+window.editItem = editItem;
+window.deleteItem = deleteItem;
+
