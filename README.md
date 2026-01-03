@@ -8,33 +8,68 @@ Pixel Fish Tank is a Tamagotchi-style virtual pet game for Android. Take care of
 
 ## 🎬 Promo Video
 
-Check out our promo video to see Pixel Fish Tank in action:
+Watch Pixel Fish Tank in action! See all the features, gameplay, and adorable pixel-art fish:
 
-https://github.com/chartmann1590/Pixel-Fish-Tank/raw/main/promo/pixel_fish_tank_promo.mp4
+<div align="center">
+  <video width="800" controls>
+    <source src="https://github.com/chartmann1590/Pixel-Fish-Tank/raw/main/promo/pixel_fish_tank_promo.mp4" type="video/mp4">
+    Your browser does not support the video tag. <a href="https://github.com/chartmann1590/Pixel-Fish-Tank/raw/main/promo/pixel_fish_tank_promo.mp4">Download the video</a> instead.
+  </video>
+</div>
 
 ## 📸 Screenshots
 
-### Main Menu
-![Main Menu](screenshots/mainmenu.png)
+<div align="center">
 
-### Tank View
-![Tank View](screenshots/tankview.png)
+### 🎮 Gameplay Screens
 
-### Mini-Games
-![Mini-Games](screenshots/minigames.png)
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <strong>Main Menu</strong><br/>
+      <img src="screenshots/mainmenu.png" alt="Main Menu" width="100%"/>
+    </td>
+    <td align="center" width="50%">
+      <strong>Tank View</strong><br/>
+      <img src="screenshots/tankview.png" alt="Tank View" width="100%"/>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <strong>Mini-Games</strong><br/>
+      <img src="screenshots/minigames.png" alt="Mini-Games" width="100%"/>
+    </td>
+    <td align="center" width="50%">
+      <strong>Decoration Store</strong><br/>
+      <img src="screenshots/decorationsview.png" alt="Decoration Store" width="100%"/>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <strong>Store View</strong><br/>
+      <img src="screenshots/storview.png" alt="Store View" width="100%"/>
+    </td>
+    <td align="center" width="50%">
+      <strong>Home Screen Widgets</strong><br/>
+      <img src="screenshots/widgets.png" alt="Home Screen Widgets" width="100%"/>
+    </td>
+  </tr>
+</table>
 
-### Decoration Store
-![Decoration Store](screenshots/decorationsview.png)
+### ⚙️ Settings
 
-### Store View
-![Store View](screenshots/storview.png)
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="screenshots/settings.png" alt="Settings" width="100%"/>
+    </td>
+    <td align="center" width="50%">
+      <img src="screenshots/settings2.png" alt="Settings 2" width="100%"/>
+    </td>
+  </tr>
+</table>
 
-### Settings
-![Settings](screenshots/settings.png)
-![Settings 2](screenshots/settings2.png)
-
-### Home Screen Widgets
-![Widgets](screenshots/widgets.png)
+</div>
 
 ## ✨ Features
 
