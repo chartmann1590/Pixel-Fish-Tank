@@ -46,6 +46,7 @@ import com.charles.virtualpet.fishtank.audio.SfxManager
 import com.charles.virtualpet.fishtank.ui.minigame.MiniGameType
 import com.charles.virtualpet.fishtank.ui.minigame.common.Rewards
 import com.charles.virtualpet.fishtank.ui.minigame.common.useGameTimer
+import com.charles.virtualpet.fishtank.ui.components.AdMobBanner
 import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.random.Random
@@ -165,7 +166,8 @@ fun CleanupRushScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(16.dp)
+                .padding(bottom = 58.dp), // Space for banner (50dp) + padding
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             when (gameState) {
@@ -380,6 +382,9 @@ fun CleanupRushScreen(
                     }
                 }
             }
+            
+            // AdMob Banner
+            AdMobBanner()
         }
     }
 }

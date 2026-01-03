@@ -1,0 +1,4 @@
+# ads.txt for Pixel Fish Tank
+# This app does not serve advertisements
+# For more information, visit: https://pixel-fish-tank.web.app
+

@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.charles.virtualpet.fishtank.ui.components.AdMobBanner
 
 @Composable
 fun MiniGameHubScreen(
@@ -56,7 +57,8 @@ fun MiniGameHubScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(16.dp)
+                .padding(bottom = 58.dp), // Space for banner (50dp) + padding
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Header with back button
@@ -86,7 +88,9 @@ fun MiniGameHubScreen(
             
             // Render games from registry
             LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
                 verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
             ) {
                 items(MiniGameRegistry.allGames) { gameDef ->
@@ -103,6 +107,9 @@ fun MiniGameHubScreen(
                     )
                 }
             }
+            
+            // AdMob Banner
+            AdMobBanner()
         }
     }
 }

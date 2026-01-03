@@ -33,6 +33,7 @@ import com.charles.virtualpet.fishtank.ui.theme.PastelGreen
 import com.charles.virtualpet.fishtank.ui.theme.PastelPink
 import com.charles.virtualpet.fishtank.ui.theme.PastelPurple
 import com.charles.virtualpet.fishtank.ui.theme.PastelYellow
+import com.charles.virtualpet.fishtank.ui.components.AdMobBanner
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -72,7 +73,8 @@ fun TutorialOnboardingScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp),
+                .padding(24.dp)
+                .padding(bottom = 58.dp), // Space for banner (50dp) + padding
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Skip button (top right)
@@ -191,6 +193,9 @@ fun TutorialOnboardingScreen(
                     )
                 }
             }
+            
+            // AdMob Banner
+            AdMobBanner()
         }
     }
 }

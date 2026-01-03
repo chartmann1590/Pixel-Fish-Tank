@@ -15,6 +15,7 @@ import androidx.navigation.compose.rememberNavController
 import com.google.firebase.FirebaseApp
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.perf.FirebasePerformance
+import com.google.android.gms.ads.MobileAds
 import com.charles.virtualpet.fishtank.data.GameStateRepository
 import com.charles.virtualpet.fishtank.data.ImageCacheManager
 import com.charles.virtualpet.fishtank.data.FirebaseStoreRepository
@@ -65,6 +66,9 @@ class MainActivity : ComponentActivity() {
         // Initialize Analytics
         com.charles.virtualpet.fishtank.analytics.AnalyticsHelper.initialize(this)
         com.charles.virtualpet.fishtank.analytics.AnalyticsHelper.logAppOpen()
+        
+        // Initialize AdMob
+        MobileAds.initialize(this) {}
         
         // Enable edge-to-edge
         enableEdgeToEdge()

@@ -59,6 +59,7 @@ import com.charles.virtualpet.fishtank.ui.theme.PastelGreen
 import com.charles.virtualpet.fishtank.ui.theme.PastelPink
 import com.charles.virtualpet.fishtank.ui.theme.PastelPurple
 import com.charles.virtualpet.fishtank.ui.theme.PastelYellow
+import com.charles.virtualpet.fishtank.ui.components.AdMobBanner
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
@@ -135,6 +136,7 @@ fun DecorationStoreScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(20.dp)
+                .padding(bottom = 58.dp) // Space for banner (50dp) + padding
         ) {
             // Enhanced Header with gradient card
             Card(
@@ -360,10 +362,16 @@ fun DecorationStoreScreen(
             }
         }
         
+        // AdMob Banner
+        AdMobBanner(
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
+        
         // Snackbar for errors
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)
+                .padding(bottom = 50.dp)
         )
     }
 }

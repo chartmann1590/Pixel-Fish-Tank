@@ -105,6 +105,7 @@ body {
     gap: 15px;
 }
 
+#emailInput,
 #passwordInput {
     padding: 15px;
     border: 2px solid rgba(74, 144, 226, 0.3);
@@ -113,11 +114,20 @@ body {
     color: var(--text-light);
     font-size: 16px;
     transition: border-color 0.3s;
+    font-family: 'Inter', sans-serif;
+    width: 100%;
 }
 
+#emailInput::placeholder,
+#passwordInput::placeholder {
+    color: var(--text-muted);
+}
+
+#emailInput:focus,
 #passwordInput:focus {
     outline: none;
     border-color: var(--aqua-blue);
+    box-shadow: 0 0 0 3px rgba(91, 192, 222, 0.1);
 }
 
 .error-message {
@@ -189,6 +199,17 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.header-user {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-email {
+    color: var(--text-muted);
+    font-size: 0.9rem;
 }
 
 .header-brand {

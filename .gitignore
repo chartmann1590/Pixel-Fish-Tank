@@ -110,6 +110,7 @@ scripts/
 .firebaserc
 firebase.json
 storage.rules
+firestore.rules
 # Note: firestore.rules and storage.rules are typically committed as they're security rules
 # firestore.indexes.json is also typically committed as it's index definitions
 
@@ -127,3 +128,19 @@ listing/
 *.env
 !.env.template
 !.env.example
+
+# Node modules
+node_modules/
+package-lock.json
+
+# CORS configuration (may contain environment-specific settings)
+cors.json
+
+# Temporary release files
+temp_release/
+*.apk
+*.aab
+
+# Promo video source files (large files)
+promo/voiceover.mp3
+promo/requirements.txt

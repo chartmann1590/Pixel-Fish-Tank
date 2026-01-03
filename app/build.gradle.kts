@@ -21,6 +21,15 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        
+        // AdMob configuration from gradle.properties
+        val admobAppId = project.findProperty("ADMOB_APP_ID") as? String ?: ""
+        val admobBannerAdUnitId = project.findProperty("ADMOB_BANNER_AD_UNIT_ID") as? String ?: ""
+        
+        buildConfigField("String", "ADMOB_APP_ID", "\"$admobAppId\"")
+        buildConfigField("String", "ADMOB_BANNER_AD_UNIT_ID", "\"$admobBannerAdUnitId\"")
+        
+        manifestPlaceholders["ADMOB_APP_ID"] = admobAppId
     }
 
     buildTypes {
@@ -41,6 +50,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.4"
@@ -101,6 +111,9 @@ dependencies {
 
     // Image Loading
     implementation("io.coil-kt:coil-compose:2.5.0")
+
+    // AdMob
+    implementation("com.google.android.gms:play-services-ads:22.6.0")
 
     // Testing
     testImplementation("junit:junit:4.13.2")

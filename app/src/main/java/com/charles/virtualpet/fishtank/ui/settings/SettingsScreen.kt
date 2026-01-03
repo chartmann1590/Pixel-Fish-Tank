@@ -73,6 +73,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import com.charles.virtualpet.fishtank.ui.components.AdMobBanner
 
 @Composable
 private fun TimePickerDialog(
@@ -159,6 +160,7 @@ fun SettingsScreen(
             .fillMaxSize()
             .background(backgroundGradient)
             .verticalScroll(rememberScrollState())
+            .padding(bottom = 58.dp) // Space for banner (50dp) + padding
     ) {
         // Beautiful Header
         Box(
@@ -1195,6 +1197,9 @@ private fun BackupRestoreSection(
                 )
             }
         }
+        
+        // AdMob Banner
+        AdMobBanner()
     }
     
     // Confirmation dialog

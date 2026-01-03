@@ -43,6 +43,7 @@ import com.charles.virtualpet.fishtank.ui.minigame.MiniGameResult
 import com.charles.virtualpet.fishtank.ui.minigame.MiniGameType
 import com.charles.virtualpet.fishtank.ui.minigame.common.Rewards
 import com.charles.virtualpet.fishtank.ui.minigame.common.useGameTimer
+import com.charles.virtualpet.fishtank.ui.components.AdMobBanner
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
@@ -209,7 +210,8 @@ fun FishFollowScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(16.dp)
+                .padding(bottom = 58.dp), // Space for banner (50dp) + padding
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             when (gameState) {
@@ -414,6 +416,9 @@ fun FishFollowScreen(
                     }
                 }
             }
+            
+            // AdMob Banner
+            AdMobBanner()
         }
     }
 }

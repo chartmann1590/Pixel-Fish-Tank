@@ -47,6 +47,7 @@ import com.charles.virtualpet.fishtank.domain.GameViewModel
 import com.charles.virtualpet.fishtank.domain.model.InventoryItem
 import com.charles.virtualpet.fishtank.domain.model.ItemType
 import com.charles.virtualpet.fishtank.ui.components.CachedImage
+import com.charles.virtualpet.fishtank.ui.components.AdMobBanner
 
 @Composable
 fun DecorationPlacementScreen(
@@ -66,6 +67,7 @@ fun DecorationPlacementScreen(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
+            .padding(bottom = 58.dp) // Space for banner (50dp) + padding
     ) {
         Text(
             text = "Place Decorations",
@@ -322,6 +324,9 @@ fun DecorationPlacementScreen(
         ) {
             Text("Back to Tank")
         }
+        
+        // AdMob Banner
+        AdMobBanner()
     }
 }
 

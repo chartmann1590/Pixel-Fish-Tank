@@ -21,5 +21,7 @@ android.enableJetifier=true
 android.suppressUnsupportedCompileSdk=35
 
 # AdMob Configuration
-ADMOB_APP_ID=ca-app-pub-8382831211800454~9628907495
-ADMOB_BANNER_AD_UNIT_ID=ca-app-pub-8382831211800454/3827939994
+# Replace these with your actual AdMob IDs
+ADMOB_APP_ID=YOUR_ADMOB_APP_ID_HERE
+ADMOB_BANNER_AD_UNIT_ID=YOUR_ADMOB_BANNER_AD_UNIT_ID_HERE
+

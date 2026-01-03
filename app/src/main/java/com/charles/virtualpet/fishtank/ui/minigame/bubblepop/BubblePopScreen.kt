@@ -42,6 +42,7 @@ import com.charles.virtualpet.fishtank.ui.minigame.MiniGameResult
 import com.charles.virtualpet.fishtank.ui.minigame.MiniGameType
 import com.charles.virtualpet.fishtank.ui.minigame.common.Rewards
 import com.charles.virtualpet.fishtank.ui.minigame.common.useGameTimer
+import com.charles.virtualpet.fishtank.ui.components.AdMobBanner
 import kotlinx.coroutines.delay
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -167,7 +168,8 @@ fun BubblePopScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(16.dp)
+                .padding(bottom = 58.dp), // Space for banner (50dp) + padding
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             when (gameState) {
@@ -377,6 +379,9 @@ fun BubblePopScreen(
                     }
                 }
             }
+            
+            // AdMob Banner
+            AdMobBanner()
         }
     }
 }
