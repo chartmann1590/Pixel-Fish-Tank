@@ -5,6 +5,7 @@ data class MiniGameResult(
     val score: Int,
     val coinsEarned: Int,
     val xpEarned: Int,
-    val isHighScore: Boolean
+    val isHighScore: Boolean,
+    val difficulty: MiniGameDifficulty = MiniGameDifficulty.MEDIUM
 )
 

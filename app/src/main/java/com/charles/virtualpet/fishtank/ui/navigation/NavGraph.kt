@@ -25,6 +25,7 @@ import com.charles.virtualpet.fishtank.ui.store.DecorationPlacementScreen
 import com.charles.virtualpet.fishtank.ui.store.DecorationStoreScreen
 import com.charles.virtualpet.fishtank.ui.tank.TankScreen
 import com.charles.virtualpet.fishtank.ui.tutorial.TutorialOnboardingScreen
+import com.charles.virtualpet.fishtank.analytics.AnalyticsHelper
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -144,6 +145,21 @@ fun NavGraph(
             BubblePopScreen(
                 highScoreStore = highScoreStore,
                 onFinish = { result ->
+                    // Log analytics
+                    AnalyticsHelper.logMiniGameComplete(
+                        gameType = result.type.name,
+                        difficulty = result.difficulty.name,
+                        score = result.score,
+                        coinsEarned = result.coinsEarned,
+                        xpEarned = result.xpEarned
+                    )
+                    if (result.isHighScore) {
+                        AnalyticsHelper.logMiniGameHighScore(
+                            gameType = result.type.name,
+                            difficulty = result.difficulty.name,
+                            highScore = result.score
+                        )
+                    }
                     viewModel.addCoins(result.coinsEarned)
                     viewModel.addXP(result.xpEarned)
                     viewModel.completeMinigameTask()
@@ -160,6 +176,21 @@ fun NavGraph(
             TimingBarScreen(
                 highScoreStore = highScoreStore,
                 onFinish = { result ->
+                    // Log analytics
+                    AnalyticsHelper.logMiniGameComplete(
+                        gameType = result.type.name,
+                        difficulty = result.difficulty.name,
+                        score = result.score,
+                        coinsEarned = result.coinsEarned,
+                        xpEarned = result.xpEarned
+                    )
+                    if (result.isHighScore) {
+                        AnalyticsHelper.logMiniGameHighScore(
+                            gameType = result.type.name,
+                            difficulty = result.difficulty.name,
+                            highScore = result.score
+                        )
+                    }
                     viewModel.addCoins(result.coinsEarned)
                     viewModel.addXP(result.xpEarned)
                     viewModel.completeMinigameTask()
@@ -177,6 +208,21 @@ fun NavGraph(
                 highScoreStore = highScoreStore,
                 sfxManager = sfxManager,
                 onFinish = { result ->
+                    // Log analytics
+                    AnalyticsHelper.logMiniGameComplete(
+                        gameType = result.type.name,
+                        difficulty = result.difficulty.name,
+                        score = result.score,
+                        coinsEarned = result.coinsEarned,
+                        xpEarned = result.xpEarned
+                    )
+                    if (result.isHighScore) {
+                        AnalyticsHelper.logMiniGameHighScore(
+                            gameType = result.type.name,
+                            difficulty = result.difficulty.name,
+                            highScore = result.score
+                        )
+                    }
                     viewModel.addCoins(result.coinsEarned)
                     viewModel.addXP(result.xpEarned)
                     viewModel.completeMinigameTask()
@@ -193,6 +239,21 @@ fun NavGraph(
             FoodDropScreen(
                 highScoreStore = highScoreStore,
                 onFinish = { result ->
+                    // Log analytics
+                    AnalyticsHelper.logMiniGameComplete(
+                        gameType = result.type.name,
+                        difficulty = result.difficulty.name,
+                        score = result.score,
+                        coinsEarned = result.coinsEarned,
+                        xpEarned = result.xpEarned
+                    )
+                    if (result.isHighScore) {
+                        AnalyticsHelper.logMiniGameHighScore(
+                            gameType = result.type.name,
+                            difficulty = result.difficulty.name,
+                            highScore = result.score
+                        )
+                    }
                     viewModel.addCoins(result.coinsEarned)
                     viewModel.addXP(result.xpEarned)
                     viewModel.completeMinigameTask()
@@ -209,6 +270,21 @@ fun NavGraph(
             MemoryShellsScreen(
                 highScoreStore = highScoreStore,
                 onFinish = { result ->
+                    // Log analytics
+                    AnalyticsHelper.logMiniGameComplete(
+                        gameType = result.type.name,
+                        difficulty = result.difficulty.name,
+                        score = result.score,
+                        coinsEarned = result.coinsEarned,
+                        xpEarned = result.xpEarned
+                    )
+                    if (result.isHighScore) {
+                        AnalyticsHelper.logMiniGameHighScore(
+                            gameType = result.type.name,
+                            difficulty = result.difficulty.name,
+                            highScore = result.score
+                        )
+                    }
                     viewModel.addCoins(result.coinsEarned)
                     viewModel.addXP(result.xpEarned)
                     viewModel.completeMinigameTask()
@@ -225,6 +301,21 @@ fun NavGraph(
             FishFollowScreen(
                 highScoreStore = highScoreStore,
                 onFinish = { result ->
+                    // Log analytics
+                    AnalyticsHelper.logMiniGameComplete(
+                        gameType = result.type.name,
+                        difficulty = result.difficulty.name,
+                        score = result.score,
+                        coinsEarned = result.coinsEarned,
+                        xpEarned = result.xpEarned
+                    )
+                    if (result.isHighScore) {
+                        AnalyticsHelper.logMiniGameHighScore(
+                            gameType = result.type.name,
+                            difficulty = result.difficulty.name,
+                            highScore = result.score
+                        )
+                    }
                     viewModel.addCoins(result.coinsEarned)
                     viewModel.addXP(result.xpEarned)
                     viewModel.completeMinigameTask()

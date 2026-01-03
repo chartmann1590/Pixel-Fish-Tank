@@ -36,6 +36,8 @@ Pixel Fish Tank is a Tamagotchi-style virtual pet game for Android. Take care of
 - Built with **Jetpack Compose** for modern UI
 - Uses **DataStore** for local data persistence
 - **Firebase** integration for crash reporting, analytics, and messaging
+  - Comprehensive analytics tracking for user interactions and gameplay patterns
+  - Event tracking for game actions, mini-games, progression, and app usage
 - Material Design 3 theming
 - Traditional RemoteViews for enhanced widget design
 - Smooth animations and pixel-art graphics
@@ -166,6 +168,7 @@ Check the issue tracker for known bugs and planned features.
 - ✅ Enhanced widget system with RemoteViews
 - ✅ High score tracking
 - ✅ Unlimited levels with progressive XP requirements
+- ✅ Firebase Analytics integration with comprehensive event tracking
 
 ### v1.0
 - ✅ Core fish care mechanics

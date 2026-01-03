@@ -710,6 +710,10 @@ Join the Pixel Fish Tank community:
 
 ---
 
-*Last updated: [Current Date]*  
-*App Version: 1.0*
+*Last updated: December 2024*  
+*App Version: 1.1.0*
+
+## Analytics & Privacy
+
+Pixel Fish Tank uses Firebase Analytics to help us understand how players interact with the game. This helps us improve features and fix issues. All analytics data is anonymous and does not include personal information. You can learn more in our [Privacy Policy](../PRIVACY_POLICY.md).
 

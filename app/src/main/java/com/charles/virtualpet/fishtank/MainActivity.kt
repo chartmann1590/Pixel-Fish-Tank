@@ -62,6 +62,10 @@ class MainActivity : ComponentActivity() {
         FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(true)
         FirebasePerformance.getInstance().isPerformanceCollectionEnabled = true
         
+        // Initialize Analytics
+        com.charles.virtualpet.fishtank.analytics.AnalyticsHelper.initialize(this)
+        com.charles.virtualpet.fishtank.analytics.AnalyticsHelper.logAppOpen()
+        
         // Enable edge-to-edge
         enableEdgeToEdge()
         
@@ -131,6 +135,7 @@ class MainActivity : ComponentActivity() {
     override fun onPause() {
         super.onPause()
         bgMusicManager?.pause()
+        com.charles.virtualpet.fishtank.analytics.AnalyticsHelper.logAppBackground()
     }
     
     override fun onResume() {

@@ -117,7 +117,8 @@ fun TimingBarScreen(
                 score = score,
                 coinsEarned = coinsEarned,
                 xpEarned = xpEarned,
-                isHighScore = isHighScore
+                isHighScore = isHighScore,
+                difficulty = difficulty
             )
         } else {
             null

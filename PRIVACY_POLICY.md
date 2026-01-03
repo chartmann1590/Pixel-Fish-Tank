@@ -23,10 +23,17 @@ Pixel Fish Tank is designed to be **offline-first**. All game data is stored loc
 The App uses Firebase services which may collect certain information automatically:
 
 #### Firebase Analytics
-- App usage statistics (sessions, screen views)
+- App usage statistics (sessions, screen views, app opens/closes)
 - Device information (model, OS version)
 - General location data (country/region level)
 - App performance metrics
+- Gameplay events (feeding fish, cleaning tank, playing mini-games, placing decorations)
+- Progression events (level ups, task completions, daily streaks)
+- Mini-game performance (scores, difficulty levels, high scores)
+- Settings changes
+- Backup/restore operations
+
+**Note**: All analytics events are anonymous and do not contain personal information. We use this data to understand how players interact with the game and improve the user experience.
 
 #### Firebase Crashlytics
 - Crash reports and stack traces

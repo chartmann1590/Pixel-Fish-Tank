@@ -7,15 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2024-12-XX
+
 ### Added
-- Initial project setup
-- Core fish care mechanics
-- Tank interaction system
-- Mini-game implementation
-- Decoration system
-- Daily tasks and streak tracking
-- Firebase integration (Crashlytics, Analytics, Messaging)
-- Offline-first data persistence
+- **Firebase Analytics Integration**: Comprehensive event tracking for user interactions
+  - Game action events (feed fish, clean tank, place/remove decorations)
+  - Mini-game events (start, complete, high scores) with difficulty tracking
+  - Progression events (level up, task completion, daily streaks)
+  - Screen navigation tracking
+  - Settings changes tracking
+  - Backup/restore operation tracking
+  - App lifecycle events (open, background)
+- Analytics helper class for centralized event logging
+- Difficulty tracking in mini-game results
+
+### Technical
+- Enhanced Firebase Analytics implementation with custom event parameters
+- Analytics events logged for all major user interactions
+- Privacy-compliant analytics (no personal data collected)
 
 ## [1.0.0] - 2024-XX-XX
 

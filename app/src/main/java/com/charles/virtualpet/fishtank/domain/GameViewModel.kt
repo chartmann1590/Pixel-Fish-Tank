@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.charles.virtualpet.fishtank.data.GameStateRepository
+import com.charles.virtualpet.fishtank.data.DecorationStore
 import com.charles.virtualpet.fishtank.domain.model.Decoration
 import com.charles.virtualpet.fishtank.domain.model.GameState
 import com.charles.virtualpet.fishtank.domain.model.InventoryItem
@@ -12,6 +13,7 @@ import com.charles.virtualpet.fishtank.domain.model.PlacedDecoration
 import com.charles.virtualpet.fishtank.widgets.WidgetUpdateHelper
 import com.charles.virtualpet.fishtank.notifications.NotificationScheduler
 import com.charles.virtualpet.fishtank.notifications.PersistentNotificationManager
+import com.charles.virtualpet.fishtank.analytics.AnalyticsHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -140,6 +142,14 @@ class GameViewModel(
             viewModelScope.launch {
                 WidgetUpdateHelper.updateAllWidgets(getApplication())
             }
+            // Log analytics
+            AnalyticsHelper.logFeedFish()
+            if (taskResult.rewardXP > 0 || taskResult.rewardCoins > 0) {
+                AnalyticsHelper.logTaskComplete("feed_fish", taskResult.rewardCoins, taskResult.rewardXP)
+            }
+            if (newLevel > currentLevel) {
+                AnalyticsHelper.logLevelUp(newLevel, newXP)
+            }
             updatedState
         }
     }
@@ -180,6 +190,14 @@ class GameViewModel(
             }
             // Update persistent notification
             persistentNotificationManager.updateNotification(updatedState)
+            // Log analytics
+            AnalyticsHelper.logCleanTank()
+            if (taskResult.rewardXP > 0 || taskResult.rewardCoins > 0) {
+                AnalyticsHelper.logTaskComplete("clean_tank", taskResult.rewardCoins, taskResult.rewardXP)
+            }
+            if (newLevel > currentLevel) {
+                AnalyticsHelper.logLevelUp(newLevel, newXP)
+            }
             updatedState
         }
     }
@@ -373,6 +391,15 @@ class GameViewModel(
                 dailyTasks = taskResult.tasks
             )
             saveState(updatedState)
+            // Log analytics
+            val decoration = DecorationStore.getDecorationById(decorationId)
+            AnalyticsHelper.logPlaceDecoration(decoration?.type?.name ?: "unknown")
+            if (taskResult.rewardXP > 0 || taskResult.rewardCoins > 0) {
+                AnalyticsHelper.logTaskComplete("decorate_tank", taskResult.rewardCoins, taskResult.rewardXP)
+            }
+            if (newLevel > currentLevel) {
+                AnalyticsHelper.logLevelUp(newLevel, newXP)
+            }
             updatedState
         }
     }
@@ -413,6 +440,9 @@ class GameViewModel(
                 economy = state.economy.copy(inventoryItems = updatedInventory)
             )
             saveState(updatedState)
+            // Log analytics
+            val decoration = DecorationStore.getDecorationById(placedDecoration.decorationId)
+            AnalyticsHelper.logRemoveDecoration(decoration?.type?.name ?: "unknown")
             updatedState
         }
     }
@@ -439,6 +469,13 @@ class GameViewModel(
                 dailyTasks = taskResult.tasks
             )
             saveState(updatedState)
+            // Log analytics
+            if (taskResult.rewardXP > 0 || taskResult.rewardCoins > 0) {
+                AnalyticsHelper.logTaskComplete(taskId, taskResult.rewardCoins, taskResult.rewardXP)
+            }
+            if (newLevel > currentLevel) {
+                AnalyticsHelper.logLevelUp(newLevel, newXP)
+            }
             updatedState
         }
     }
