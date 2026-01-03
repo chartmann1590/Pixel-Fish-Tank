@@ -11,10 +11,9 @@ Pixel Fish Tank is a Tamagotchi-style virtual pet game for Android. Take care of
 Watch Pixel Fish Tank in action! See all the features, gameplay, and adorable pixel-art fish:
 
 <div align="center">
-  <video width="800" controls>
-    <source src="https://github.com/chartmann1590/Pixel-Fish-Tank/raw/main/promo/pixel_fish_tank_promo.mp4" type="video/mp4">
-    Your browser does not support the video tag. <a href="https://github.com/chartmann1590/Pixel-Fish-Tank/raw/main/promo/pixel_fish_tank_promo.mp4">Download the video</a> instead.
-  </video>
+  
+<iframe width="800" height="450" src="https://www.youtube.com/embed/XK6H-mTGFZg" title="Pixel Fish Tank Promo Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
 </div>
 
 ## 📸 Screenshots
