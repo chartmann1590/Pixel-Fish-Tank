@@ -117,3 +117,13 @@ storage.rules
 public/admin/script.js
 public/admin/index.html
 
+# Google Play Store listing assets
+listing/
+
+# Environment variables (never commit actual .env files)
+.env
+.env.local
+.env.*.local
+*.env
+!.env.template
+!.env.example

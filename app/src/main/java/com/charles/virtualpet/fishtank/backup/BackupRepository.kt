@@ -14,8 +14,11 @@ import com.charles.virtualpet.fishtank.domain.model.PlacedDecoration
 import com.charles.virtualpet.fishtank.domain.model.Settings
 import com.charles.virtualpet.fishtank.domain.model.TankLayout
 import com.charles.virtualpet.fishtank.ui.minigame.MiniGameType
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.io.InputStream
 import java.io.OutputStream
@@ -25,17 +28,55 @@ class BackupRepository(private val context: Context) {
     suspend fun exportCurrentState(
         gameState: GameState,
         repository: GameStateRepository
-    ): BackupEnvelope {
-        // Get high scores
+    ): BackupEnvelope = withContext(Dispatchers.IO) {
+        // Get all high scores
         val bubblePopScore = repository.getHighScore(MiniGameType.BUBBLE_POP).first()
         val timingBarScore = repository.getHighScore(MiniGameType.TIMING_BAR).first()
         val cleanupRushScore = repository.getHighScore(MiniGameType.CLEANUP_RUSH).first()
+        val foodDropScore = repository.getHighScore(MiniGameType.FOOD_DROP).first()
+        val memoryShellsScore = repository.getHighScore(MiniGameType.MEMORY_SHELLS).first()
+        val fishFollowScore = repository.getHighScore(MiniGameType.FISH_FOLLOW).first()
         
         val minigameScores = MinigameScoresExport(
             bubblePop = bubblePopScore,
             timingBar = timingBarScore,
-            cleanupRush = cleanupRushScore
+            cleanupRush = cleanupRushScore,
+            foodDrop = foodDropScore,
+            memoryShells = memoryShellsScore,
+            fishFollow = fishFollowScore
         )
+        
+        // Fetch purchases from Firestore
+        val purchases = try {
+            val firestore = FirebaseFirestore.getInstance()
+            val androidId = android.provider.Settings.Secure.getString(
+                context.contentResolver,
+                android.provider.Settings.Secure.ANDROID_ID
+            ) ?: "unknown"
+            
+            val query = firestore.collection("purchases")
+                .whereEqualTo("userId", androidId)
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+            
+            val snapshot = query.get().await()
+            snapshot.documents.mapNotNull { doc ->
+                val data = doc.data ?: return@mapNotNull null
+                PurchaseExport(
+                    itemId = data["itemId"] as? String ?: "",
+                    itemName = data["itemName"] as? String ?: "",
+                    price = (data["price"] as? Number)?.toInt() ?: 0,
+                    type = data["type"] as? String ?: "",
+                    timestamp = (data["timestamp"] as? Number)?.toLong() ?: 0L,
+                    userId = data["userId"] as? String ?: androidId
+                )
+            }
+        } catch (e: Exception) {
+            // If Firestore fetch fails, continue without purchases
+            android.util.Log.w("BackupRepository", "Failed to fetch purchases", e)
+            emptyList()
+        }
+        
+        val purchaseHistory = PurchaseHistoryExport(purchases = purchases)
         
         val gameStateExport = GameStateExport(
             fishState = gameState.fishState.toFishStateExport(),
@@ -43,10 +84,11 @@ class BackupRepository(private val context: Context) {
             tankLayout = gameState.tankLayout.toTankLayoutExport(),
             dailyTasks = gameState.dailyTasks.toDailyTasksStateExport(),
             settings = gameState.settings.toSettingsExport(),
-            minigameScores = minigameScores
+            minigameScores = minigameScores,
+            purchaseHistory = purchaseHistory
         )
         
-        return BackupEnvelope(
+        BackupEnvelope(
             exportedAtEpoch = System.currentTimeMillis(),
             data = gameStateExport
         )
@@ -88,15 +130,48 @@ class BackupRepository(private val context: Context) {
     suspend fun importState(
         envelope: BackupEnvelope,
         repository: GameStateRepository
-    ): Result<Unit> {
-        return try {
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
             val gameState = envelope.data.toGameState()
             repository.saveGameState(gameState)
             
-            // Save high scores
+            // Save all high scores
             repository.saveHighScore(MiniGameType.BUBBLE_POP, envelope.data.minigameScores.bubblePop)
             repository.saveHighScore(MiniGameType.TIMING_BAR, envelope.data.minigameScores.timingBar)
             repository.saveHighScore(MiniGameType.CLEANUP_RUSH, envelope.data.minigameScores.cleanupRush)
+            repository.saveHighScore(MiniGameType.FOOD_DROP, envelope.data.minigameScores.foodDrop)
+            repository.saveHighScore(MiniGameType.MEMORY_SHELLS, envelope.data.minigameScores.memoryShells)
+            repository.saveHighScore(MiniGameType.FISH_FOLLOW, envelope.data.minigameScores.fishFollow)
+            
+            // Restore purchases to Firestore (optional - only if they don't already exist)
+            val purchases = envelope.data.purchaseHistory.purchases
+            if (purchases.isNotEmpty()) {
+                try {
+                    val firestore = FirebaseFirestore.getInstance()
+                    val androidId = android.provider.Settings.Secure.getString(
+                        context.contentResolver,
+                        android.provider.Settings.Secure.ANDROID_ID
+                    ) ?: "unknown"
+                    
+                    // Only restore purchases that match the current user ID
+                    purchases.filter { it.userId == androidId }.forEach { purchase ->
+                        val purchaseData = hashMapOf(
+                            "itemId" to purchase.itemId,
+                            "itemName" to purchase.itemName,
+                            "price" to purchase.price,
+                            "type" to purchase.type,
+                            "timestamp" to purchase.timestamp,
+                            "userId" to purchase.userId,
+                            "restoredFromBackup" to true
+                        )
+                        // Add purchase to Firestore (it will create a new document)
+                        firestore.collection("purchases").add(purchaseData).await()
+                    }
+                } catch (e: Exception) {
+                    // Log but don't fail the restore - purchases are optional
+                    android.util.Log.w("BackupRepository", "Failed to restore purchases", e)
+                }
+            }
             
             Result.success(Unit)
         } catch (e: Exception) {
@@ -172,7 +247,18 @@ private fun DailyTask.toDailyTaskExport(): DailyTaskExport {
 private fun Settings.toSettingsExport(): SettingsExport {
     return SettingsExport(
         notificationsEnabled = notificationsEnabled,
-        reminderTimes = reminderTimes
+        reminderTimes = reminderTimes,
+        dailyReminderEnabled = dailyReminderEnabled,
+        dailyReminderTime = dailyReminderTime,
+        statusNudgesEnabled = statusNudgesEnabled,
+        persistentNotificationEnabled = persistentNotificationEnabled,
+        quietHoursEnabled = quietHoursEnabled,
+        quietHoursStart = quietHoursStart,
+        quietHoursEnd = quietHoursEnd,
+        sfxEnabled = sfxEnabled,
+        bgMusicEnabled = bgMusicEnabled,
+        hasCompletedTutorial = hasCompletedTutorial,
+        decorationsLocked = decorationsLocked
     )
 }
 
@@ -253,7 +339,18 @@ private fun DailyTaskExport.toDailyTask(): DailyTask {
 private fun SettingsExport.toSettings(): Settings {
     return Settings(
         notificationsEnabled = notificationsEnabled,
-        reminderTimes = reminderTimes
+        reminderTimes = reminderTimes,
+        dailyReminderEnabled = dailyReminderEnabled,
+        dailyReminderTime = dailyReminderTime,
+        statusNudgesEnabled = statusNudgesEnabled,
+        persistentNotificationEnabled = persistentNotificationEnabled,
+        quietHoursEnabled = quietHoursEnabled,
+        quietHoursStart = quietHoursStart,
+        quietHoursEnd = quietHoursEnd,
+        sfxEnabled = sfxEnabled,
+        bgMusicEnabled = bgMusicEnabled,
+        hasCompletedTutorial = hasCompletedTutorial,
+        decorationsLocked = decorationsLocked
     )
 }
 

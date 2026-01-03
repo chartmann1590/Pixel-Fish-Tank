@@ -159,7 +159,7 @@ Virtual_Pet/
 ├── assets/                     # Game assets (images, sprites)
 ├── build.gradle.kts
 ├── settings.gradle.kts
-└── PRP.md                      # Product Requirements Document
+└── docs/                       # Documentation (see docs/ folder)
 ```
 
 ## 🛠️ Technology Stack
@@ -212,11 +212,11 @@ See [LICENSE](LICENSE) for license information.
 
 ## 🔒 Privacy
 
-See [PRIVACY_POLICY.md](PRIVACY_POLICY.md) for our privacy policy.
+See [docs/PRIVACY_POLICY.md](docs/PRIVACY_POLICY.md) for our privacy policy.
 
 ## 📚 Documentation
 
-- [Product Requirements Document](PRP.md) - Detailed product specifications
+- [Product Requirements Document](docs/PRP.md) - Detailed product specifications
 - [Changelog](CHANGELOG.md) - Version history and changes
 
 ## 🐛 Known Issues

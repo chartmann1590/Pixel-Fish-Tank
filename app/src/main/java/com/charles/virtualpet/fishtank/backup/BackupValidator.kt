@@ -6,7 +6,7 @@ sealed class ValidationResult {
 }
 
 object BackupValidator {
-    private const val SUPPORTED_SCHEMA_VERSION = 1
+    private const val SUPPORTED_SCHEMA_VERSION = 2
     private const val EXPECTED_APP_ID = "pixel-fish-tank"
     
     fun validate(envelope: BackupEnvelope): ValidationResult {
