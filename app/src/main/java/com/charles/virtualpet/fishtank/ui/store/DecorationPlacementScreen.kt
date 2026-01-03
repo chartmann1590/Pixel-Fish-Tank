@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -57,6 +58,7 @@ fun DecorationPlacementScreen(
     val ownedDecorations = gameState.economy.inventoryItems
         .filter { it.type == ItemType.DECORATION }
     val placedDecorations = gameState.tankLayout.placedDecorations
+    val decorationsLocked = gameState.settings.decorationsLocked
     
     var selectedDecorationId by remember { mutableStateOf<String?>(null) }
 
@@ -69,6 +71,34 @@ fun DecorationPlacementScreen(
             text = "Place Decorations",
             style = MaterialTheme.typography.displaySmall,
             fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        // Lock decorations setting
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Lock decorations",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f)
+            )
+            Switch(
+                checked = decorationsLocked,
+                onCheckedChange = { viewModel.updateDecorationsLockedSettings(it) }
+            )
+        }
+        Text(
+            text = if (decorationsLocked) {
+                "Decorations are locked. Disable to remove them."
+            } else {
+                "Decorations are unlocked. Tap to remove them."
+            },
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
@@ -224,10 +254,6 @@ fun DecorationPlacementScreen(
                                     val x = (tapOffset.x / size.width.toFloat()).coerceIn(0f, 1f)
                                     val y = (tapOffset.y / size.height.toFloat()).coerceIn(0f, 1f)
                                     viewModel.placeDecoration(selectedDecorationId!!, x, y)
-                                    // Complete decorate task if this is first placement
-                                    if (placedDecorations.isEmpty()) {
-                                        viewModel.completeDecorateTask()
-                                    }
                                     selectedDecorationId = null
                                 }
                             }
@@ -256,16 +282,33 @@ fun DecorationPlacementScreen(
                                     x = with(density) { (xPos - decorationSize.toPx() / 2).toDp() },
                                     y = with(density) { (yPos - decorationSize.toPx() / 2).toDp() }
                                 )
-                                .clickable {
-                                    viewModel.removeDecoration(placed.id)
-                                }
+                                .then(
+                                    if (!decorationsLocked) {
+                                        Modifier.clickable {
+                                            viewModel.removeDecoration(placed.id)
+                                        }
+                                    } else {
+                                        Modifier
+                                    }
+                                )
+                                .then(
+                                    if (decorationsLocked) {
+                                        Modifier.alpha(0.8f)
+                                    } else {
+                                        Modifier
+                                    }
+                                )
                         )
                     }
                 }
             }
 
             Text(
-                text = "Tap placed decorations to remove them",
+                text = if (decorationsLocked) {
+                    "Unlock decorations above to remove them"
+                } else {
+                    "Tap placed decorations to remove them"
+                },
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(top = 8.dp)
             )

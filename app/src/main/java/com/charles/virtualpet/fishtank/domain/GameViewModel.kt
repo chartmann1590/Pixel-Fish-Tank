@@ -350,9 +350,27 @@ class GameViewModel(
             val updatedLayout = state.tankLayout.copy(
                 placedDecorations = state.tankLayout.placedDecorations + newPlacedDecoration
             )
+            
+            // Complete decorate task if not already completed (completeTaskIfNotDone handles the check)
+            val taskResult = completeTaskIfNotDone(state.dailyTasks, "decorate_tank")
+            
+            // Apply rewards directly in this update block to avoid nested updates
+            val currentXP = state.fishState.xp
+            val currentLevel = state.fishState.level
+            val newXP = currentXP + taskResult.rewardXP
+            val newLevel = calculateNewLevel(currentLevel, currentXP, taskResult.rewardXP)
+            
             val updatedState = state.copy(
                 tankLayout = updatedLayout,
-                economy = state.economy.copy(inventoryItems = updatedInventory)
+                economy = state.economy.copy(
+                    inventoryItems = updatedInventory,
+                    coins = state.economy.coins + taskResult.rewardCoins
+                ),
+                fishState = state.fishState.copy(
+                    xp = newXP,
+                    level = newLevel
+                ),
+                dailyTasks = taskResult.tasks
             )
             saveState(updatedState)
             updatedState
@@ -362,6 +380,11 @@ class GameViewModel(
     fun removeDecoration(placedDecorationId: String) {
         _gameState.update { currentState ->
             val state = currentState ?: GameState()
+            
+            // Check if decorations are locked
+            if (state.settings.decorationsLocked) {
+                return@update state // Don't remove if locked
+            }
             
             // Find the placed decoration to remove
             val placedDecoration = state.tankLayout.placedDecorations.find { it.id == placedDecorationId }
@@ -585,6 +608,19 @@ class GameViewModel(
             val updatedState = state.copy(
                 settings = state.settings.copy(
                     hasCompletedTutorial = true
+                )
+            )
+            saveState(updatedState)
+            updatedState
+        }
+    }
+
+    fun updateDecorationsLockedSettings(enabled: Boolean) {
+        _gameState.update { currentState ->
+            val state = currentState ?: GameState()
+            val updatedState = state.copy(
+                settings = state.settings.copy(
+                    decorationsLocked = enabled
                 )
             )
             saveState(updatedState)

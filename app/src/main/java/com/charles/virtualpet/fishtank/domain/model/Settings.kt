@@ -12,6 +12,7 @@ data class Settings(
     val quietHoursEnd: String = "08:00", // Format: "HH:mm"
     val sfxEnabled: Boolean = true,
     val bgMusicEnabled: Boolean = true,
-    val hasCompletedTutorial: Boolean = false
+    val hasCompletedTutorial: Boolean = false,
+    val decorationsLocked: Boolean = true // Lock decorations by default to prevent accidental removal
 )
 

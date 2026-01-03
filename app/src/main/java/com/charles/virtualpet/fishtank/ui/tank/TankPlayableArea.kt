@@ -33,6 +33,7 @@ fun TankPlayableArea(
     onFishClick: () -> Unit,
     onPositionUpdate: (Float, Float) -> Unit,
     onRemoveDecoration: (String) -> Unit,
+    decorationsLocked: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val density = LocalDensity.current
@@ -80,9 +81,15 @@ fun TankPlayableArea(
                                     x = with(density) { (containerRelativeX - decorationSize.toPx() / 2).toDp() },
                                     y = with(density) { (containerRelativeY - decorationSize.toPx() / 2).toDp() }
                                 )
-                                .clickable {
-                                    onRemoveDecoration(placed.id)
-                                },
+                                .then(
+                                    if (!decorationsLocked) {
+                                        Modifier.clickable {
+                                            onRemoveDecoration(placed.id)
+                                        }
+                                    } else {
+                                        Modifier
+                                    }
+                                ),
                             contentScale = ContentScale.Fit
                         )
                     }

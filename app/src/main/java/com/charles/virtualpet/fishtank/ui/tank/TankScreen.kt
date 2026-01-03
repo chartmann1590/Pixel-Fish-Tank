@@ -573,6 +573,7 @@ fun TankScreen(
                                 onRemoveDecoration = { placedId ->
                                     viewModel.removeDecoration(placedId)
                                 },
+                                decorationsLocked = gameState.settings.decorationsLocked,
                                 modifier = Modifier.fillMaxSize()
                             )
                         }
@@ -908,9 +909,6 @@ fun TankScreen(
                                 val x = (tapOffset.x / screenSize!!.width.toFloat()).coerceIn(0f, 1f)
                                 val y = (tapOffset.y / screenSize!!.height.toFloat()).coerceIn(0f, 1f)
                                 viewModel.placeDecoration(selectedDecorationId!!, x, y)
-                                if (placedDecorations.isEmpty()) {
-                                    viewModel.completeDecorateTask()
-                                }
                             }
                             selectedDecorationId = null
                             isPlacingDecoration = false
