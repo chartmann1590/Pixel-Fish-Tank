@@ -6,6 +6,36 @@ A cozy Android virtual pet game where players care for a cute pixel-art fish by 
 
 Pixel Fish Tank is a Tamagotchi-style virtual pet game for Android. Take care of your fish by feeding it, keeping its tank clean, playing mini-games to earn coins, and decorating the tank to make your fish happy. Watch as your fish grows and levels up through your care!
 
+## 🎬 Promo Video
+
+Check out our promo video to see Pixel Fish Tank in action:
+
+https://github.com/chartmann1590/Pixel-Fish-Tank/raw/main/promo/pixel_fish_tank_promo.mp4
+
+## 📸 Screenshots
+
+### Main Menu
+![Main Menu](screenshots/mainmenu.png)
+
+### Tank View
+![Tank View](screenshots/tankview.png)
+
+### Mini-Games
+![Mini-Games](screenshots/minigames.png)
+
+### Decoration Store
+![Decoration Store](screenshots/decorationsview.png)
+
+### Store View
+![Store View](screenshots/storview.png)
+
+### Settings
+![Settings](screenshots/settings.png)
+![Settings 2](screenshots/settings2.png)
+
+### Home Screen Widgets
+![Widgets](screenshots/widgets.png)
+
 ## ✨ Features
 
 ### Core Gameplay
