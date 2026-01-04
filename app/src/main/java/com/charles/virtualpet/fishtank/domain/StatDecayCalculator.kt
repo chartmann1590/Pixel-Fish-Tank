@@ -16,18 +16,21 @@ object StatDecayCalculator {
      * Calculates decayed stats based on elapsed time since last update.
      * @param currentState The current fish state
      * @param currentTimeMillis Current time in milliseconds (defaults to System.currentTimeMillis())
+     * @param applyMinimumDelay If true, only applies decay if at least 1 minute has passed (for persistence).
+     *                          If false, applies decay continuously (for UI display).
      * @return Updated FishState with decayed stats and updated timestamp
      */
     fun calculateDecay(
         currentState: FishState,
-        currentTimeMillis: Long = System.currentTimeMillis()
+        currentTimeMillis: Long = System.currentTimeMillis(),
+        applyMinimumDelay: Boolean = true
     ): FishState {
         val lastUpdate = currentState.lastUpdatedEpoch
         val elapsedMillis = currentTimeMillis - lastUpdate
         val elapsedHours = elapsedMillis / (1000.0 * 60.0 * 60.0) // Convert to hours
         
-        // Don't apply decay if less than 1 minute has passed
-        if (elapsedHours < (1.0 / 60.0)) {
+        // Don't apply decay if less than 1 minute has passed (only when applyMinimumDelay is true)
+        if (applyMinimumDelay && elapsedHours < (1.0 / 60.0)) {
             return currentState.copy(lastUpdatedEpoch = currentTimeMillis)
         }
 

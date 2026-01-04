@@ -63,6 +63,7 @@ import com.charles.virtualpet.fishtank.audio.SfxManager
 import com.charles.virtualpet.fishtank.domain.GameViewModel
 import com.charles.virtualpet.fishtank.data.DecorationStore
 import com.charles.virtualpet.fishtank.domain.MoodCalculator
+import com.charles.virtualpet.fishtank.domain.StatDecayCalculator
 import com.charles.virtualpet.fishtank.domain.model.FishMood
 import com.charles.virtualpet.fishtank.ui.components.ActionButton
 import com.charles.virtualpet.fishtank.ui.components.DailyTasksCard
@@ -129,6 +130,24 @@ fun TankScreen(
     val gameState by viewModel.gameState.collectAsStateWithLifecycle()
     val levelUpState by viewModel.levelUpState.collectAsStateWithLifecycle()
     
+    // Track current time to trigger recomposition for real-time stat updates
+    var statUpdateTime by remember { mutableStateOf(System.currentTimeMillis()) }
+    
+    // Update current time every second to trigger stat recalculation
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(1000) // Update every second for smooth stat updates
+            statUpdateTime = System.currentTimeMillis()
+        }
+    }
+    
+    // Calculate decayed fish state for real-time display (bypass 1-minute minimum for smooth updates)
+    val fishState = remember(gameState.fishState, statUpdateTime) {
+        StatDecayCalculator.calculateDecay(gameState.fishState, statUpdateTime, applyMinimumDelay = false)
+    }
+    val economy = gameState.economy
+    val placedDecorations = gameState.tankLayout.placedDecorations
+    
     // Start background music when screen appears, stop when leaving
     DisposableEffect(Unit) {
         bgMusicManager?.start()
@@ -136,9 +155,6 @@ fun TankScreen(
             bgMusicManager?.stop()
         }
     }
-    val fishState = gameState.fishState
-    val economy = gameState.economy
-    val placedDecorations = gameState.tankLayout.placedDecorations
     val ownedDecorations = gameState.economy.inventoryItems
         .filter { it.type == com.charles.virtualpet.fishtank.domain.model.ItemType.DECORATION && it.quantity > 0 }
 
@@ -333,6 +349,14 @@ fun TankScreen(
         }
     }
 
+    // Periodically save state with decay (every 30 seconds) to persist changes
+    LaunchedEffect(fishState.lastUpdatedEpoch) {
+        val timeSinceLastSave = System.currentTimeMillis() - gameState.fishState.lastUpdatedEpoch
+        if (timeSinceLastSave >= 30000) { // 30 seconds
+            viewModel.updateStatsWithDecay()
+        }
+    }
+    
     // Determine tank background based on cleanliness
     val tankBackgroundRes = when {
         fishState.cleanliness >= 70f -> R.drawable.tank_clean

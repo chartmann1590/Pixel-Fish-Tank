@@ -723,6 +723,32 @@ class GameViewModel(
         // Award 10 coins
         addCoins(10)
     }
+    
+    /**
+     * Periodically updates stats with decay. This should be called while the screen is visible
+     * to ensure stats update in real-time. Only saves state periodically to avoid excessive writes.
+     */
+    fun updateStatsWithDecay() {
+        _gameState.update { currentState ->
+            val state = currentState ?: GameState()
+            val decayedFish = StatDecayCalculator.calculateDecay(state.fishState)
+            
+            // Only update if decay was actually applied (at least 1 minute passed)
+            if (decayedFish.lastUpdatedEpoch != state.fishState.lastUpdatedEpoch) {
+                val updatedState = state.copy(fishState = decayedFish)
+                // Save state periodically (every 30 seconds) to avoid excessive writes
+                val timeSinceLastSave = System.currentTimeMillis() - (state.fishState.lastUpdatedEpoch)
+                if (timeSinceLastSave >= 30000) { // 30 seconds
+                    saveState(updatedState)
+                    // Update persistent notification
+                    persistentNotificationManager.updateNotification(updatedState)
+                }
+                updatedState
+            } else {
+                state
+            }
+        }
+    }
 }
 
 
