@@ -68,6 +68,7 @@ fun DecorationStoreScreen(
     viewModel: GameViewModel,
     repository: FirebaseStoreRepository?,
     onBack: () -> Unit,
+    onNavigateToRewards: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val gameState by viewModel.gameState.collectAsStateWithLifecycle()
@@ -222,6 +223,24 @@ fun DecorationStoreScreen(
                                 )
                             }
                         }
+                    }
+                    
+                    // Rewards button
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = onNavigateToRewards,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                    ) {
+                        Text(
+                            text = "💰 Earn Coins - Watch Ads",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                     
                     // Sync status and timestamp

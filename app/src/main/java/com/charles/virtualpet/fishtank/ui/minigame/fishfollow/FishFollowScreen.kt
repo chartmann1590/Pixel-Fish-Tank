@@ -93,18 +93,18 @@ fun FishFollowScreen(
         gameState = FishFollowGameState.SHOWING
     }
     
-    // Show sequence
-    LaunchedEffect(gameState, currentSequence.size) {
+    // Show sequence - difficulty affects display speed
+    LaunchedEffect(gameState, currentSequence.size, difficulty) {
         if (gameState == FishFollowGameState.SHOWING && currentSequence.isNotEmpty()) {
             while (showingIndex < currentSequence.size && gameState == FishFollowGameState.SHOWING) {
                 highlightedDirection = currentSequence[showingIndex]
-                delay(800) // Flash for 0.8s
+                delay((800L / difficulty.multiplier).toLong()) // Flash time - faster on harder difficulties
                 highlightedDirection = null
-                delay(200) // Brief pause between flashes
+                delay((200L / difficulty.multiplier).toLong()) // Brief pause between flashes - faster on harder difficulties
                 showingIndex++
             }
             // Sequence shown, now wait for player input
-            delay(300)
+            delay((300L / difficulty.multiplier).toLong())
             if (gameState == FishFollowGameState.SHOWING) {
                 gameState = FishFollowGameState.PLAYING
                 showingIndex = 0

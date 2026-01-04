@@ -1,6 +1,6 @@
 # Privacy Policy for Pixel Fish Tank
 
-**Last Updated**: [Current Date]
+**Last Updated**: January 3, 2025
 
 ## Introduction
 
@@ -128,7 +128,7 @@ If you are a California resident, you have additional rights under the Californi
 
 If you have any questions about this Privacy Policy, please contact us:
 
-- **Email**: [Your Contact Email]
+- **Email**: tickets@pixel-fish-tank.p.tawk.email
 - **Repository**: http://10.0.0.129:3000/charles/Pixel-Fish-Tank
 
 ## Consent

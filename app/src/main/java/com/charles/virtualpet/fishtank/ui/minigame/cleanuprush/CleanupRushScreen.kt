@@ -1,7 +1,7 @@
 package com.charles.virtualpet.fishtank.ui.minigame.cleanuprush
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,7 +32,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
@@ -47,8 +46,6 @@ import com.charles.virtualpet.fishtank.ui.minigame.MiniGameType
 import com.charles.virtualpet.fishtank.ui.minigame.common.Rewards
 import com.charles.virtualpet.fishtank.ui.minigame.common.useGameTimer
 import com.charles.virtualpet.fishtank.ui.components.AdMobBanner
-import kotlin.math.pow
-import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlinx.coroutines.delay
 
@@ -102,8 +99,8 @@ fun CleanupRushScreen(
             while (gameState == CleanupRushGameState.PLAYING) {
                 delay(spawnDelay)
                 if (gameState == CleanupRushGameState.PLAYING && spots.size < maxSpots && gameAreaWidth > 0f) {
-                    val baseSize = with(density) { (20.dp / difficulty.multiplier).toPx() }
-                    val sizeVariation = with(density) { (30.dp / difficulty.multiplier).toPx() }
+                    val baseSize = with(density) { 20.dp.toPx() }
+                    val sizeVariation = with(density) { 30.dp.toPx() }
                     spots = spots + AlgaeSpot(
                         id = java.util.UUID.randomUUID().toString(),
                         x = Random.nextFloat() * gameAreaWidth,
@@ -304,38 +301,24 @@ fun CleanupRushScreen(
                                 gameAreaWidth = size.width.toFloat()
                                 gameAreaHeight = size.height.toFloat()
                             }
-                            .pointerInput(gameState) {
-                                detectTapGestures { tapOffset ->
-                                    if (gameState == CleanupRushGameState.PLAYING) {
-                                        // Check if tap hit any spot
-                                        spots = spots.filter { spot ->
-                                            val distance = sqrt(
-                                                (tapOffset.x - spot.x).pow(2) + (tapOffset.y - spot.y).pow(2)
-                                            )
-                                            if (distance <= spot.size) {
-                                                // Spot cleaned!
-                                                score++
-                                                // Play clean splash sound
-                                                sfxManager?.play(SfxEvent.CLEAN_SPLASH)
-                                                false // Remove spot
-                                            } else {
-                                                true // Keep spot
-                                            }
-                                        }
-                                    }
-                                }
-                            }
                     ) {
                         spots.forEach { spot ->
                             Box(
                                 modifier = Modifier
                                     .align(Alignment.TopStart)
                                     .offset(
-                                        x = with(density) { spot.x.dp },
-                                        y = with(density) { spot.y.dp }
+                                        x = with(density) { (spot.x / density.density).dp },
+                                        y = with(density) { (spot.y / density.density).dp }
                                     )
                                     .size(with(density) { spot.size.dp })
                                     .clip(CircleShape)
+                                    .clickable(enabled = gameState == CleanupRushGameState.PLAYING) {
+                                        // Remove this spot when clicked
+                                        spots = spots.filter { it.id != spot.id }
+                                        score++
+                                        // Play clean splash sound
+                                        sfxManager?.play(SfxEvent.CLEAN_SPLASH)
+                                    }
                                     .background(
                                         brush = Brush.radialGradient(
                                             colors = listOf(

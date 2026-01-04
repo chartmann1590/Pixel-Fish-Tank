@@ -78,6 +78,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.background
+import com.charles.virtualpet.fishtank.ui.levelup.LevelUpScreen
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -121,10 +122,12 @@ fun TankScreen(
     onNavigateToStore: () -> Unit = {},
     onNavigateToPlacement: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
+    onNavigateToRewards: () -> Unit = {},
     showGuidedTourOnStart: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val gameState by viewModel.gameState.collectAsStateWithLifecycle()
+    val levelUpState by viewModel.levelUpState.collectAsStateWithLifecycle()
     
     // Start background music when screen appears, stop when leaving
     DisposableEffect(Unit) {
@@ -854,12 +857,12 @@ fun TankScreen(
         ExpandableFAB(
             actions = listOf(
                 FABAction(
-                    label = "feed", // Use ID for tour matching
+                    label = "Feed", // Use ID for tour matching
                     iconRes = R.drawable.ic_feed,
                     onClick = { spawnFood() }
                 ),
                 FABAction(
-                    label = "clean", // Use ID for tour matching
+                    label = "Clean", // Use ID for tour matching
                     iconRes = R.drawable.ic_clean,
                     onClick = { 
                         viewModel.cleanTank()
@@ -867,7 +870,7 @@ fun TankScreen(
                     }
                 ),
                 FABAction(
-                    label = "minigame", // Use ID for tour matching
+                    label = "Mini Game", // Use ID for tour matching
                     iconRes = null,
                     onClick = onNavigateToMiniGame
                 ),
@@ -877,7 +880,12 @@ fun TankScreen(
                     onClick = onNavigateToStore
                 ),
                 FABAction(
-                    label = "decorate", // Use ID for tour matching
+                    label = "Free Coins",
+                    iconRes = null,
+                    onClick = onNavigateToRewards
+                ),
+                FABAction(
+                    label = "Decorate", // Use ID for tour matching
                     iconRes = null,
                     onClick = {
                         if (ownedDecorations.isNotEmpty()) {
@@ -917,6 +925,17 @@ fun TankScreen(
             )
         }
         
+        // Level-up screen
+        levelUpState?.let { state ->
+            LevelUpScreen(
+                newLevel = state.newLevel,
+                currentXP = state.currentXP,
+                xpForNextLevel = state.xpForNextLevel,
+                onDismiss = {
+                    viewModel.dismissLevelUp()
+                }
+            )
+        }
     }
 }
 

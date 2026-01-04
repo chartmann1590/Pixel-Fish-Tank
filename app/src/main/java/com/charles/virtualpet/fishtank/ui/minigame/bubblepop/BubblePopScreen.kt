@@ -2,12 +2,16 @@ package com.charles.virtualpet.fishtank.ui.minigame.bubblepop
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -31,7 +35,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -43,9 +46,9 @@ import com.charles.virtualpet.fishtank.ui.minigame.MiniGameType
 import com.charles.virtualpet.fishtank.ui.minigame.common.Rewards
 import com.charles.virtualpet.fishtank.ui.minigame.common.useGameTimer
 import com.charles.virtualpet.fishtank.ui.components.AdMobBanner
+import com.charles.virtualpet.fishtank.audio.SfxEvent
+import com.charles.virtualpet.fishtank.audio.SfxManager
 import kotlinx.coroutines.delay
-import kotlin.math.pow
-import kotlin.math.sqrt
 import kotlin.random.Random
 
 data class Bubble(
@@ -65,6 +68,7 @@ enum class BubblePopGameState {
 @Composable
 fun BubblePopScreen(
     highScoreStore: com.charles.virtualpet.fishtank.ui.minigame.HighScoreStore,
+    sfxManager: SfxManager?,
     onFinish: (MiniGameResult) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
@@ -88,13 +92,13 @@ fun BubblePopScreen(
         if (gameState == BubblePopGameState.PLAYING && gameAreaWidth > 0f) {
             bubbles = emptyList()
             score = 0
-            val baseSpawnMin = (1000 / difficulty.multiplier).toLong()
-            val baseSpawnMax = (3000 / difficulty.multiplier).toLong()
+            val baseSpawnMin = (1000L / difficulty.multiplier).toLong()
+            val baseSpawnMax = (3000L / difficulty.multiplier).toLong()
             while (gameState == BubblePopGameState.PLAYING) {
                 delay(Random.nextLong(baseSpawnMin, baseSpawnMax))
                 if (gameState == BubblePopGameState.PLAYING && gameAreaWidth > 0f) {
-                    val baseRadius = with(density) { (15.dp / difficulty.multiplier).toPx() }
-                    val radiusVariation = with(density) { (20.dp / difficulty.multiplier).toPx() }
+                    val baseRadius = with(density) { 15.dp.toPx() }
+                    val radiusVariation = with(density) { 20.dp.toPx() }
                     bubbles = bubbles + Bubble(
                         id = java.util.UUID.randomUUID().toString(),
                         x = Random.nextFloat() * gameAreaWidth,
@@ -302,35 +306,13 @@ fun BubblePopScreen(
                                     )
                                 )
                             )
-                            .pointerInput(gameState) {
-                                detectTapGestures { tapOffset ->
-                                    if (gameState == BubblePopGameState.PLAYING) {
-                                        // Update game area dimensions
-                                        gameAreaWidth = size.width.toFloat()
-                                        gameAreaHeight = size.height.toFloat()
-                                        
-                                        // Check if tap hit any bubble
-                                        bubbles = bubbles.filter { bubble ->
-                                            val distance = sqrt(
-                                                (tapOffset.x - bubble.x).pow(2) + (tapOffset.y - bubble.y).pow(2)
-                                            )
-                                            if (distance <= bubble.radius) {
-                                                // Bubble popped!
-                                                score++
-                                                false // Remove bubble
-                                            } else {
-                                                true // Keep bubble
-                                            }
-                                        }
-                                    }
-                                }
+                            .onSizeChanged { size ->
+                                gameAreaWidth = size.width.toFloat()
+                                gameAreaHeight = size.height.toFloat()
                             }
                     ) {
+                        // Canvas for drawing bubbles
                         Canvas(modifier = Modifier.fillMaxSize()) {
-                            // Update game area dimensions
-                            gameAreaWidth = size.width
-                            gameAreaHeight = size.height
-                            
                             bubbles.forEach { bubble ->
                                 // Draw bubble with gradient effect
                                 drawCircle(
@@ -359,6 +341,26 @@ fun BubblePopScreen(
                                     center = Offset(bubble.x - bubble.radius * 0.3f, bubble.y - bubble.radius * 0.3f)
                                 )
                             }
+                        }
+                        
+                        // Overlay invisible clickable boxes for each bubble
+                        bubbles.forEach { bubble ->
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopStart)
+                                    .offset(
+                                        x = with(density) { (bubble.x / density.density).dp - (bubble.radius * 1.4f / density.density).dp },
+                                        y = with(density) { (bubble.y / density.density).dp - (bubble.radius * 1.4f / density.density).dp }
+                                    )
+                                    .size(with(density) { (bubble.radius * 2.8f / density.density).dp }) // 40% buffer on each side
+                                    .clickable(enabled = gameState == BubblePopGameState.PLAYING) {
+                                        // Remove this bubble when clicked
+                                        bubbles = bubbles.filter { it.id != bubble.id }
+                                        score++
+                                        // Play bubble pop sound
+                                        sfxManager?.play(SfxEvent.BUBBLE_POP)
+                                    }
+                            )
                         }
                     }
                 }

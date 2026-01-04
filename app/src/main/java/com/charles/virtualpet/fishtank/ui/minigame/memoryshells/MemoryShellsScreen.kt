@@ -104,17 +104,18 @@ fun MemoryShellsScreen(
     }
     
     // Show stars, then hide - use separate LaunchedEffects to avoid restart issues
-    LaunchedEffect(gameState == MemoryShellsGameState.SHOWING) {
+    // Difficulty affects preview time speed
+    LaunchedEffect(gameState == MemoryShellsGameState.SHOWING, difficulty) {
         if (gameState == MemoryShellsGameState.SHOWING) {
-            delay(previewTime.toLong())
+            delay((previewTime.toLong() / difficulty.multiplier).toLong())
             gameState = MemoryShellsGameState.HIDDEN
         }
     }
     
     // Separate LaunchedEffect for HIDDEN -> PLAYING transition
-    LaunchedEffect(gameState == MemoryShellsGameState.HIDDEN) {
+    LaunchedEffect(gameState == MemoryShellsGameState.HIDDEN, difficulty) {
         if (gameState == MemoryShellsGameState.HIDDEN) {
-            delay(200) // Brief pause before allowing input
+            delay((200L / difficulty.multiplier).toLong()) // Brief pause before allowing input - faster on harder difficulties
             gameState = MemoryShellsGameState.PLAYING
         }
     }

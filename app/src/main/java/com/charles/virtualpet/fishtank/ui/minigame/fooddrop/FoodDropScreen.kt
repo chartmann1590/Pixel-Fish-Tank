@@ -90,14 +90,15 @@ fun FoodDropScreen(
         isActive = gameState == FoodDropGameState.PLAYING
     )
     
-    // Move pellets down
-    LaunchedEffect(gameState, pellets.size) {
+    // Move pellets down - difficulty affects fall speed
+    LaunchedEffect(gameState, pellets.size, difficulty) {
         if (gameState == FoodDropGameState.PLAYING) {
             while (gameState == FoodDropGameState.PLAYING) {
                 delay(16) // ~60fps
                 pellets = pellets.map { pellet ->
                     val elapsed = System.currentTimeMillis() - pellet.startTime
-                    val fallDuration = 3000L // 3 seconds to fall
+                    val baseFallDuration = 3000L // 3 seconds to fall at baseline
+                    val fallDuration = (baseFallDuration / difficulty.multiplier).toLong() // Faster on harder difficulties
                     val progress = (elapsed.toFloat() / fallDuration).coerceIn(0f, 1f)
                     pellet.copy(y = progress)
                 }.filter { it.y < 1.0f } // Remove pellets that reached bottom

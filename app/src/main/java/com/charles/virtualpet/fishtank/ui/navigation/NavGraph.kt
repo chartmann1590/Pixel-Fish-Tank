@@ -10,6 +10,7 @@ import com.charles.virtualpet.fishtank.audio.BackgroundMusicManager
 import com.charles.virtualpet.fishtank.audio.SfxManager
 import com.charles.virtualpet.fishtank.data.GameStateRepository
 import com.charles.virtualpet.fishtank.domain.GameViewModel
+import com.charles.virtualpet.fishtank.ui.components.InterstitialAdManager
 import com.charles.virtualpet.fishtank.ui.minigame.MiniGameHubScreen
 import com.charles.virtualpet.fishtank.ui.minigame.MiniGameType
 import com.charles.virtualpet.fishtank.ui.minigame.MiniGameRegistry
@@ -20,6 +21,7 @@ import com.charles.virtualpet.fishtank.ui.minigame.cleanuprush.CleanupRushScreen
 import com.charles.virtualpet.fishtank.ui.minigame.fooddrop.FoodDropScreen
 import com.charles.virtualpet.fishtank.ui.minigame.memoryshells.MemoryShellsScreen
 import com.charles.virtualpet.fishtank.ui.minigame.fishfollow.FishFollowScreen
+import com.charles.virtualpet.fishtank.ui.rewards.RewardsScreen
 import com.charles.virtualpet.fishtank.ui.settings.SettingsScreen
 import com.charles.virtualpet.fishtank.ui.store.DecorationPlacementScreen
 import com.charles.virtualpet.fishtank.ui.store.DecorationStoreScreen
@@ -43,6 +45,7 @@ sealed class Screen(val route: String) {
     object DecorationStore : Screen("decoration_store")
     object DecorationPlacement : Screen("decoration_placement")
     object Settings : Screen("settings")
+    object Rewards : Screen("rewards")
 }
 
 @Composable
@@ -52,7 +55,8 @@ fun NavGraph(
     repository: GameStateRepository,
     storeRepository: com.charles.virtualpet.fishtank.data.FirebaseStoreRepository?,
     sfxManager: SfxManager?,
-    bgMusicManager: BackgroundMusicManager?
+    bgMusicManager: BackgroundMusicManager?,
+    interstitialAdManager: InterstitialAdManager?
 ) {
     val gameState by viewModel.gameState.collectAsStateWithLifecycle()
     val hasCompletedTutorial = gameState.settings.hasCompletedTutorial
@@ -115,6 +119,9 @@ fun NavGraph(
                 onNavigateToSettings = {
                     navController.navigate(Screen.Settings.route)
                 },
+                onNavigateToRewards = {
+                    navController.navigate(Screen.Rewards.route)
+                },
                 showGuidedTourOnStart = showGuidedTour
             )
         }
@@ -144,6 +151,7 @@ fun NavGraph(
             val highScoreStore = remember { DataStoreHighScoreStore(repository) }
             BubblePopScreen(
                 highScoreStore = highScoreStore,
+                sfxManager = sfxManager,
                 onFinish = { result ->
                     // Log analytics
                     AnalyticsHelper.logMiniGameComplete(
@@ -163,7 +171,10 @@ fun NavGraph(
                     viewModel.addCoins(result.coinsEarned)
                     viewModel.addXP(result.xpEarned)
                     viewModel.completeMinigameTask()
-                    navController.popBackStack()
+                    // Show interstitial ad, then navigate back after dismissal
+                    interstitialAdManager?.showAd {
+                        navController.popBackStack()
+                    }
                 },
                 onBack = {
                     navController.popBackStack()
@@ -194,7 +205,10 @@ fun NavGraph(
                     viewModel.addCoins(result.coinsEarned)
                     viewModel.addXP(result.xpEarned)
                     viewModel.completeMinigameTask()
-                    navController.popBackStack()
+                    // Show interstitial ad, then navigate back after dismissal
+                    interstitialAdManager?.showAd {
+                        navController.popBackStack()
+                    }
                 },
                 onBack = {
                     navController.popBackStack()
@@ -226,7 +240,10 @@ fun NavGraph(
                     viewModel.addCoins(result.coinsEarned)
                     viewModel.addXP(result.xpEarned)
                     viewModel.completeMinigameTask()
-                    navController.popBackStack()
+                    // Show interstitial ad, then navigate back after dismissal
+                    interstitialAdManager?.showAd {
+                        navController.popBackStack()
+                    }
                 },
                 onBack = {
                     navController.popBackStack()
@@ -257,7 +274,10 @@ fun NavGraph(
                     viewModel.addCoins(result.coinsEarned)
                     viewModel.addXP(result.xpEarned)
                     viewModel.completeMinigameTask()
-                    navController.popBackStack()
+                    // Show interstitial ad, then navigate back after dismissal
+                    interstitialAdManager?.showAd {
+                        navController.popBackStack()
+                    }
                 },
                 onBack = {
                     navController.popBackStack()
@@ -288,7 +308,10 @@ fun NavGraph(
                     viewModel.addCoins(result.coinsEarned)
                     viewModel.addXP(result.xpEarned)
                     viewModel.completeMinigameTask()
-                    navController.popBackStack()
+                    // Show interstitial ad, then navigate back after dismissal
+                    interstitialAdManager?.showAd {
+                        navController.popBackStack()
+                    }
                 },
                 onBack = {
                     navController.popBackStack()
@@ -319,7 +342,10 @@ fun NavGraph(
                     viewModel.addCoins(result.coinsEarned)
                     viewModel.addXP(result.xpEarned)
                     viewModel.completeMinigameTask()
-                    navController.popBackStack()
+                    // Show interstitial ad, then navigate back after dismissal
+                    interstitialAdManager?.showAd {
+                        navController.popBackStack()
+                    }
                 },
                 onBack = {
                     navController.popBackStack()
@@ -333,6 +359,9 @@ fun NavGraph(
                 repository = storeRepository,
                 onBack = {
                     navController.popBackStack()
+                },
+                onNavigateToRewards = {
+                    navController.navigate(Screen.Rewards.route)
                 }
             )
         }
@@ -357,6 +386,15 @@ fun NavGraph(
                 },
                 onReplayTutorial = {
                     navController.navigate(Screen.Tutorial.route)
+                }
+            )
+        }
+        
+        composable(Screen.Rewards.route) {
+            RewardsScreen(
+                viewModel = viewModel,
+                onBack = {
+                    navController.popBackStack()
                 }
             )
         }

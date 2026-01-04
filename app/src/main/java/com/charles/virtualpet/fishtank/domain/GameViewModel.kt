@@ -41,6 +41,16 @@ class GameViewModel(
             initialValue = GameState()
         )
 
+    // Level-up state
+    private val _levelUpState = MutableStateFlow<LevelUpState?>(null)
+    val levelUpState: StateFlow<LevelUpState?> = _levelUpState.asStateFlow()
+    
+    data class LevelUpState(
+        val newLevel: Int,
+        val currentXP: Int,
+        val xpForNextLevel: Int
+    )
+
     private var isInitialLoad = true
 
     init {
@@ -86,7 +96,7 @@ class GameViewModel(
      * - Level 5: 1500 XP (500 more)
      * And so on, with unlimited levels.
      */
-    private fun getXPRequiredForLevel(level: Int): Int {
+    fun getXPRequiredForLevel(level: Int): Int {
         return 100 * level * (level + 1) / 2
     }
 
@@ -119,10 +129,13 @@ class GameViewModel(
             val taskResult = completeTaskIfNotDone(state.dailyTasks, "feed_fish")
             
             // Apply rewards directly in this update block to avoid nested updates
+            // Only award XP if hunger is less than 100% (action actually improves the stat)
+            val baseXP = if (decayedFish.hunger < 100f) 2 else 0
+            val totalXP = taskResult.rewardXP + baseXP
             val currentXP = state.fishState.xp
             val currentLevel = state.fishState.level
-            val newXP = currentXP + taskResult.rewardXP
-            val newLevel = calculateNewLevel(currentLevel, currentXP, taskResult.rewardXP)
+            val newXP = currentXP + totalXP
+            val newLevel = calculateNewLevel(currentLevel, currentXP, totalXP)
             
             val updatedState = state.copy(
                 fishState = decayedFish.copy(
@@ -149,6 +162,9 @@ class GameViewModel(
             }
             if (newLevel > currentLevel) {
                 AnalyticsHelper.logLevelUp(newLevel, newXP)
+                // Show level-up screen
+                val xpForNextLevel = getXPRequiredForLevel(newLevel + 1)
+                _levelUpState.value = LevelUpState(newLevel, newXP, xpForNextLevel)
             }
             updatedState
         }
@@ -165,10 +181,13 @@ class GameViewModel(
             val taskResult = completeTaskIfNotDone(state.dailyTasks, "clean_tank")
             
             // Apply rewards directly in this update block to avoid nested updates
+            // Only award XP if cleanliness is less than 100% (action actually improves the stat)
+            val baseXP = if (decayedFish.cleanliness < 100f) 3 else 0
+            val totalXP = taskResult.rewardXP + baseXP
             val currentXP = state.fishState.xp
             val currentLevel = state.fishState.level
-            val newXP = currentXP + taskResult.rewardXP
-            val newLevel = calculateNewLevel(currentLevel, currentXP, taskResult.rewardXP)
+            val newXP = currentXP + totalXP
+            val newLevel = calculateNewLevel(currentLevel, currentXP, totalXP)
             
             val updatedState = state.copy(
                 fishState = decayedFish.copy(
@@ -197,6 +216,9 @@ class GameViewModel(
             }
             if (newLevel > currentLevel) {
                 AnalyticsHelper.logLevelUp(newLevel, newXP)
+                // Show level-up screen
+                val xpForNextLevel = getXPRequiredForLevel(newLevel + 1)
+                _levelUpState.value = LevelUpState(newLevel, newXP, xpForNextLevel)
             }
             updatedState
         }
@@ -263,6 +285,12 @@ class GameViewModel(
             // Update widgets after state change (minigame completion)
             viewModelScope.launch {
                 WidgetUpdateHelper.updateAllWidgets(getApplication())
+            }
+            if (newLevel > currentLevel) {
+                AnalyticsHelper.logLevelUp(newLevel, newXP)
+                // Show level-up screen
+                val xpForNextLevel = getXPRequiredForLevel(newLevel + 1)
+                _levelUpState.value = LevelUpState(newLevel, newXP, xpForNextLevel)
             }
             updatedState
         }
@@ -399,6 +427,9 @@ class GameViewModel(
             }
             if (newLevel > currentLevel) {
                 AnalyticsHelper.logLevelUp(newLevel, newXP)
+                // Show level-up screen
+                val xpForNextLevel = getXPRequiredForLevel(newLevel + 1)
+                _levelUpState.value = LevelUpState(newLevel, newXP, xpForNextLevel)
             }
             updatedState
         }
@@ -475,9 +506,16 @@ class GameViewModel(
             }
             if (newLevel > currentLevel) {
                 AnalyticsHelper.logLevelUp(newLevel, newXP)
+                // Show level-up screen
+                val xpForNextLevel = getXPRequiredForLevel(newLevel + 1)
+                _levelUpState.value = LevelUpState(newLevel, newXP, xpForNextLevel)
             }
             updatedState
         }
+    }
+
+    fun dismissLevelUp() {
+        _levelUpState.value = null
     }
 
     fun completeMinigameTask() {
@@ -663,6 +701,27 @@ class GameViewModel(
             saveState(updatedState)
             updatedState
         }
+    }
+    
+    // Rewarded ads methods
+    suspend fun canWatchRewardedAd(): Boolean {
+        val count = repository.getRewardedAdsWatchedCount()
+        return count < 6
+    }
+    
+    suspend fun getRemainingRewardedAdsCount(): Int {
+        val count = repository.getRewardedAdsWatchedCount()
+        return (6 - count).coerceAtLeast(0)
+    }
+    
+    suspend fun getTimeUntilRewardedAdReset(): Long {
+        return repository.getTimeUntilReset()
+    }
+    
+    suspend fun recordRewardedAdWatch() {
+        repository.recordRewardedAdWatch()
+        // Award 10 coins
+        addCoins(10)
     }
 }
 

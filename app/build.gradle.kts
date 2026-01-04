@@ -25,16 +25,20 @@ android {
         // AdMob configuration from gradle.properties
         val admobAppId = project.findProperty("ADMOB_APP_ID") as? String ?: ""
         val admobBannerAdUnitId = project.findProperty("ADMOB_BANNER_AD_UNIT_ID") as? String ?: ""
+        val admobRewardedInterstitialAdUnitId = project.findProperty("ADMOB_REWARDED_INTERSTITIAL_AD_UNIT_ID") as? String ?: ""
+        val admobInterstitialAdUnitId = project.findProperty("ADMOB_INTERSTITIAL_AD_UNIT_ID") as? String ?: ""
         
         buildConfigField("String", "ADMOB_APP_ID", "\"$admobAppId\"")
         buildConfigField("String", "ADMOB_BANNER_AD_UNIT_ID", "\"$admobBannerAdUnitId\"")
+        buildConfigField("String", "ADMOB_REWARDED_INTERSTITIAL_AD_UNIT_ID", "\"$admobRewardedInterstitialAdUnitId\"")
+        buildConfigField("String", "ADMOB_INTERSTITIAL_AD_UNIT_ID", "\"$admobInterstitialAdUnitId\"")
         
         manifestPlaceholders["ADMOB_APP_ID"] = admobAppId
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

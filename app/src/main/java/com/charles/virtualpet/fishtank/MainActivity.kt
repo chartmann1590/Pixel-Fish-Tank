@@ -30,6 +30,7 @@ import androidx.work.WorkManager
 import java.util.concurrent.TimeUnit
 import com.charles.virtualpet.fishtank.audio.BackgroundMusicManager
 import com.charles.virtualpet.fishtank.audio.SfxManager
+import com.charles.virtualpet.fishtank.ui.components.InterstitialAdManager
 import com.charles.virtualpet.fishtank.ui.navigation.NavGraph
 import com.charles.virtualpet.fishtank.ui.theme.PixelFishTankTheme
 import com.charles.virtualpet.fishtank.notifications.NotificationChannels
@@ -52,6 +53,13 @@ class MainActivity : ComponentActivity() {
     private val imageCacheManager by lazy { ImageCacheManager(this) }
     private val storeRepository by lazy { FirebaseStoreRepository(this, imageCacheManager) }
     
+    // Interstitial ad manager
+    private val interstitialAdManager by lazy {
+        InterstitialAdManager(
+            context = this
+        )
+    }
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
@@ -69,6 +77,9 @@ class MainActivity : ComponentActivity() {
         
         // Initialize AdMob
         MobileAds.initialize(this) {}
+        
+        // Preload interstitial ad
+        interstitialAdManager.loadAd()
         
         // Enable edge-to-edge
         enableEdgeToEdge()
@@ -113,7 +124,8 @@ class MainActivity : ComponentActivity() {
                     repository = repository,
                     storeRepository = storeRepository,
                     sfxManager = sfxManager,
-                    bgMusicManager = bgMusicManager
+                    bgMusicManager = bgMusicManager,
+                    interstitialAdManager = interstitialAdManager
                 )
             }
         }

@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.1.0] - 2024-12-XX
+## [1.1.0] - 2025-01-03
 
 ### Added
 - **Unlimited Leveling System**: Progressive XP requirements with unlimited levels
@@ -68,6 +68,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Background music system with lifecycle management
 - Widget system using RemoteViews for enhanced design
 - Store sync worker for automatic content updates
+- **ProGuard/R8 obfuscation enabled** for release builds to protect code and reduce APK size
+- Comprehensive ProGuard rules for all dependencies (Kotlin, Compose, Firebase, AdMob, DataStore)
+- Privacy policy updated with contact information and current date
+- Store listing information completed for Google Play Store submission
 
 ## [1.0.0] - 2024-XX-XX
 

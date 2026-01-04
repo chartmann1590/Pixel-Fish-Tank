@@ -21,6 +21,7 @@ import com.charles.virtualpet.fishtank.domain.model.PlacedDecoration
 import com.charles.virtualpet.fishtank.domain.model.Settings
 import com.charles.virtualpet.fishtank.domain.model.TankLayout
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import org.json.JSONArray
 import org.json.JSONObject
@@ -65,6 +66,9 @@ class GameStateRepository(private val context: Context) {
         val BG_MUSIC_ENABLED = booleanPreferencesKey("bg_music_enabled")
         val LAST_BACKUP_EPOCH = longPreferencesKey("last_backup_epoch")
         val HAS_COMPLETED_TUTORIAL = booleanPreferencesKey("has_completed_tutorial")
+        val REWARDED_ADS_WATCHED_COUNT = intPreferencesKey("rewarded_ads_watched_count")
+        val REWARDED_ADS_LAST_WATCH_TIME = longPreferencesKey("rewarded_ads_last_watch_time")
+        val REWARDED_ADS_RESET_TIME = longPreferencesKey("rewarded_ads_reset_time")
     }
 
     val gameState: Flow<GameState> = context.dataStore.data.map { preferences ->
@@ -179,6 +183,66 @@ class GameStateRepository(private val context: Context) {
         context.dataStore.edit { preferences ->
             preferences[Keys.LAST_BACKUP_EPOCH] = epoch
         }
+    }
+    
+    // Rewarded ads tracking
+    val rewardedAdsWatchedCount: Flow<Int> = context.dataStore.data.map { preferences ->
+        val count = preferences[Keys.REWARDED_ADS_WATCHED_COUNT] ?: 0
+        val resetTime = preferences[Keys.REWARDED_ADS_RESET_TIME] ?: 0L
+        
+        // Reset count if 6 hours have passed
+        if (resetTime > 0 && System.currentTimeMillis() >= resetTime) {
+            0
+        } else {
+            count
+        }
+    }
+    
+    val rewardedAdsResetTime: Flow<Long> = context.dataStore.data.map { preferences ->
+        preferences[Keys.REWARDED_ADS_RESET_TIME] ?: 0L
+    }
+    
+    suspend fun getRewardedAdsWatchedCount(): Int {
+        val preferences = context.dataStore.data.first()
+        val count = preferences[Keys.REWARDED_ADS_WATCHED_COUNT] ?: 0
+        val resetTime = preferences[Keys.REWARDED_ADS_RESET_TIME] ?: 0L
+        
+        // Reset count if 6 hours have passed
+        if (resetTime > 0 && System.currentTimeMillis() >= resetTime) {
+            return 0
+        }
+        return count
+    }
+    
+    suspend fun recordRewardedAdWatch() {
+        context.dataStore.edit { preferences ->
+            val currentTime = System.currentTimeMillis()
+            val currentCount = preferences[Keys.REWARDED_ADS_WATCHED_COUNT] ?: 0
+            val resetTime = preferences[Keys.REWARDED_ADS_RESET_TIME] ?: 0L
+            
+            // Reset if 6 hours have passed
+            if (resetTime > 0 && currentTime >= resetTime) {
+                preferences[Keys.REWARDED_ADS_WATCHED_COUNT] = 1
+                preferences[Keys.REWARDED_ADS_RESET_TIME] = currentTime + (6 * 60 * 60 * 1000) // 6 hours
+            } else {
+                preferences[Keys.REWARDED_ADS_WATCHED_COUNT] = currentCount + 1
+                // Set reset time if this is the first ad in the period
+                if (currentCount == 0) {
+                    preferences[Keys.REWARDED_ADS_RESET_TIME] = currentTime + (6 * 60 * 60 * 1000) // 6 hours
+                }
+            }
+            preferences[Keys.REWARDED_ADS_LAST_WATCH_TIME] = currentTime
+        }
+    }
+    
+    suspend fun getTimeUntilReset(): Long {
+        val preferences = context.dataStore.data.first()
+        val resetTime = preferences[Keys.REWARDED_ADS_RESET_TIME] ?: 0L
+        if (resetTime == 0L) return 0L
+        
+        val currentTime = System.currentTimeMillis()
+        val timeRemaining = resetTime - currentTime
+        return if (timeRemaining > 0) timeRemaining else 0L
     }
 
     private fun serializeInventoryItems(items: List<InventoryItem>): String {

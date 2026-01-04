@@ -21,5 +21,6 @@
     <string name="widget_daily_tasks_description">Today\'s tasks</string>
     <string name="share_tank_text">Check out my fish tank in Pixel Fish Tank 🐠✨\n\nhttps://pixel-fish-tank.web.app/</string>
     <string name="share_tank_text_with_level">Check out my Level %1$d fish tank in Pixel Fish Tank 🐠✨\n\nhttps://pixel-fish-tank.web.app/</string>
+    <string name="share_level_up_text">🎉 My fish just reached Level %1$d in Pixel Fish Tank! Only %2$d XP until the next level! 🐠✨</string>
 </resources>
 
