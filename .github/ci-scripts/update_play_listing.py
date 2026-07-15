@@ -97,6 +97,29 @@ def main() -> None:
     if uploaded < 2:
         raise SystemExit(f"Only {uploaded} screenshot(s) uploaded; Play requires at least 2. Aborting before commit.")
 
+    # Feature graphic (exactly 1024x500) and hi-res icon (exactly 512x512) are
+    # pre-generated (cropped/resized from assets/feature and assets/icon) and
+    # checked into distribution/play-listing/en-US/.
+    for image_type, filename in (("featureGraphic", "featureGraphic.png"), ("icon", "icon.png")):
+        path = METADATA_DIR / filename
+        if not path.exists():
+            print(f"  skip {image_type} (missing): {path}")
+            continue
+        service.edits().images().deleteall(
+            packageName=package_name,
+            editId=edit_id,
+            language=LOCALE,
+            imageType=image_type,
+        ).execute()
+        service.edits().images().upload(
+            packageName=package_name,
+            editId=edit_id,
+            language=LOCALE,
+            imageType=image_type,
+            media_body=str(path),
+        ).execute()
+        print(f"  uploaded {image_type}: {path}")
+
     service.edits().commit(packageName=package_name, editId=edit_id).execute()
     print(f"Committed edit {edit_id} - Play Store listing is now live with {uploaded} screenshots.")
 
