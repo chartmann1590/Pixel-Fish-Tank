@@ -176,6 +176,20 @@ jobs:
           whatsNewDirectory: distribution/whatsnew
           mappingFile: app/build/outputs/mapping/release/mapping.txt
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Play Developer API client
+        run: pip install --quiet google-api-python-client google-auth
+
+      - name: Update Play Store listing (title, descriptions, screenshots)
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          PACKAGE_NAME: com.charles.virtualpet.fishtank
+        run: python .github/ci-scripts/update_play_listing.py
+
       - name: Clean up sensitive files
         if: always()
         run: |

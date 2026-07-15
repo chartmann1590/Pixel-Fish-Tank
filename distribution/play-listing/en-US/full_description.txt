@@ -1,0 +1,49 @@
+🐠 Welcome to Pixel Fish Tank - Your Cozy Virtual Pet Adventure! 🐠
+
+Take care of your adorable pixel-art fish in this relaxing Tamagotchi-style virtual pet game. Feed your fish, keep its tank sparkling clean, play fun mini-games, and decorate your aquarium to create the perfect home for your aquatic friend!
+
+✨ KEY FEATURES ✨
+
+🎮 Core Gameplay
+• Virtual Fish System - Manage your fish's hunger, cleanliness, happiness, level, and XP
+• Unlimited Leveling - Watch your fish grow and level up with no level cap! Each level requires more XP, creating endless progression
+• Tank Interaction - Feed your fish and clean its tank to keep it healthy and happy
+• Six Engaging Mini-Games - Play Bubble Pop, Timing Bar, Cleanup Rush, Food Drop, Memory Shells, and Fish Follow with multiple difficulty levels
+• Fish Color Skins - Unlock new fish colors like Ocean Blue, Coral Pink, Mint Green, and Royal Gold using coins
+• Decoration System - Customize your tank with beautiful decorations like plants, rocks, toys, and more
+• Daily Tasks - Complete daily tasks to maintain streaks and earn rewards
+• Backup & Restore - Export and import your game progress with JSON validation
+
+📱 Home Screen Widgets
+• Small Fish Status Widget (2x1) - Quick view of your fish's mood, hunger, level & coins
+• Medium Fish Status Widget (3x2) - Detailed view with all stat progress bars
+• Streak Counter Widget (2x2) - Track your daily streak and best streak record
+• Daily Tasks Widget (4x3) - Task checklist with completion status and dynamic messages
+• Beautiful pastel gradient backgrounds with color-coded progress bars
+• Real-time updates when game state changes
+• All widgets clickable to open the app
+
+🎨 Beautiful Design
+• Cute pixel art with chibi-style fish
+• Cozy aquarium atmosphere with soft pastel colors
+• Smooth animations for a relaxing experience
+• Material Design 3 theming
+
+💾 Offline-First
+• Fully playable without an internet connection
+• All progress stored locally on your device
+• No account required - just download and play!
+
+🏆 Progression & Rewards
+• Earn coins by completing tasks and playing mini-games
+• Spend coins on food, decorations, and upgrades
+• Track high scores for all mini-games
+• Maintain daily streaks to unlock special rewards
+
+Perfect for:
+• Casual players who love virtual pet games
+• Fans of Tamagotchi-style games
+• Anyone looking for a relaxing, routine-based game
+• Players who enjoy collecting and customization
+
+Download Pixel Fish Tank today and start your virtual pet journey! Your fish is waiting for you! 🐟✨
