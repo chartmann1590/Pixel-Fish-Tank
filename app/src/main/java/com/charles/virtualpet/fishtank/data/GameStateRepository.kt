@@ -67,6 +67,7 @@ class GameStateRepository(private val context: Context) {
         val LAST_BACKUP_EPOCH = longPreferencesKey("last_backup_epoch")
         val HAS_COMPLETED_TUTORIAL = booleanPreferencesKey("has_completed_tutorial")
         val DECORATIONS_LOCKED = booleanPreferencesKey("decorations_locked")
+        val SELECTED_FISH_SKIN = stringPreferencesKey("selected_fish_skin")
         val REWARDED_ADS_WATCHED_COUNT = intPreferencesKey("rewarded_ads_watched_count")
         val REWARDED_ADS_LAST_WATCH_TIME = longPreferencesKey("rewarded_ads_last_watch_time")
         val REWARDED_ADS_RESET_TIME = longPreferencesKey("rewarded_ads_reset_time")
@@ -125,6 +126,7 @@ class GameStateRepository(private val context: Context) {
             preferences[Keys.BG_MUSIC_ENABLED] = gameState.settings.bgMusicEnabled
             preferences[Keys.HAS_COMPLETED_TUTORIAL] = gameState.settings.hasCompletedTutorial
             preferences[Keys.DECORATIONS_LOCKED] = gameState.settings.decorationsLocked
+            preferences[Keys.SELECTED_FISH_SKIN] = gameState.settings.selectedFishSkinId
         }
     }
 
@@ -380,7 +382,8 @@ class GameStateRepository(private val context: Context) {
             sfxEnabled = preferences[Keys.SFX_ENABLED] ?: true,
             bgMusicEnabled = preferences[Keys.BG_MUSIC_ENABLED] ?: true,
             hasCompletedTutorial = preferences[Keys.HAS_COMPLETED_TUTORIAL] ?: false,
-            decorationsLocked = preferences[Keys.DECORATIONS_LOCKED] ?: true
+            decorationsLocked = preferences[Keys.DECORATIONS_LOCKED] ?: true,
+            selectedFishSkinId = preferences[Keys.SELECTED_FISH_SKIN] ?: "classic"
         )
     }
 

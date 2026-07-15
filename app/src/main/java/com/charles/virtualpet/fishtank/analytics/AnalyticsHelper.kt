@@ -73,6 +73,17 @@ object AnalyticsHelper {
         ))
     }
 
+    fun logBuyFishSkin(skinId: String, price: Int) {
+        logEvent("buy_fish_skin", mapOf(
+            "skin_id" to skinId,
+            "price" to price
+        ))
+    }
+
+    fun logSelectFishSkin(skinId: String) {
+        logEvent("select_fish_skin", mapOf("skin_id" to skinId))
+    }
+
     // Mini-Game Events
     fun logMiniGameStart(gameType: String, difficulty: String) {
         logEvent("minigame_start", mapOf(

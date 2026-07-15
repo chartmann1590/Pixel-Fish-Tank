@@ -81,7 +81,8 @@ Watch Pixel Fish Tank in action! See all the features, gameplay, and adorable pi
   - Level 4 → 5: 1,000 XP total (400 more)
   - And so on, with no level cap!
 - **Tank Interaction**: Feed your fish and clean its tank to keep it healthy
-- **Mini-Games**: Three engaging mini-games (Timing Bar Challenge, Bubble Pop, Cleanup Rush) with difficulty levels
+- **Six Mini-Games**: Bubble Pop, Timing Bar, Cleanup Rush, Food Drop, Memory Shells, and Fish Follow, each with difficulty levels
+- **Fish Color Skins**: Unlock and equip new fish colors (Ocean Blue, Coral Pink, Mint Green, Royal Gold) with coins
 - **Decoration System**: Customize your tank with various decorations
 - **Daily Tasks**: Complete daily tasks to maintain streaks and earn rewards
 - **Backup & Restore**: Export and import your game progress with JSON validation
@@ -225,7 +226,10 @@ Check the issue tracker for known bugs and planned features.
 
 ## 🗺️ Roadmap
 
-### v1.1 (Current)
+### v1.2 (Current)
+- ✅ Fish Color Skins - unlock and equip new fish colors with coins
+
+### v1.1
 - ✅ Beautiful home screen widgets (4 types)
 - ✅ Three mini-games with difficulty levels
 - ✅ Backup & restore functionality
@@ -242,7 +246,7 @@ Check the issue tracker for known bugs and planned features.
 
 ### Future Features
 - Screenshot sharing
-- Additional fish species
+- Additional fish species/shapes
 - More mini-games
 - Multiple tanks
 - iOS version

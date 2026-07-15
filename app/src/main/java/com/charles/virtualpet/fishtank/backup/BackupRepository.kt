@@ -264,7 +264,8 @@ private fun Settings.toSettingsExport(): SettingsExport {
         sfxEnabled = sfxEnabled,
         bgMusicEnabled = bgMusicEnabled,
         hasCompletedTutorial = hasCompletedTutorial,
-        decorationsLocked = decorationsLocked
+        decorationsLocked = decorationsLocked,
+        selectedFishSkinId = selectedFishSkinId
     )
 }
 
@@ -356,7 +357,8 @@ private fun SettingsExport.toSettings(): Settings {
         sfxEnabled = sfxEnabled,
         bgMusicEnabled = bgMusicEnabled,
         hasCompletedTutorial = hasCompletedTutorial,
-        decorationsLocked = decorationsLocked
+        decorationsLocked = decorationsLocked,
+        selectedFishSkinId = selectedFishSkinId
     )
 }
 

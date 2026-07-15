@@ -16,6 +16,9 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -30,7 +33,8 @@ fun FishDisplay(
     modifier: Modifier = Modifier,
     onPositionUpdate: ((Float, Float) -> Unit)? = null,
     nearbyFood: List<Pair<Float, Float>> = emptyList(), // List of (x, y) food positions normalized 0-1
-    onClick: (() -> Unit)? = null // Callback when fish is clicked
+    onClick: (() -> Unit)? = null, // Callback when fish is clicked
+    tintColor: Color? = null // Fish skin tint; null = classic/untinted look
 ) {
     val fishImageRes = when (mood) {
         FishMood.HAPPY -> R.drawable.fish_happy
@@ -205,6 +209,7 @@ fun FishDisplay(
         Image(
             painter = painterResource(id = fishImageRes),
             contentDescription = contentDescription,
+            colorFilter = tintColor?.let { ColorFilter.tint(it, BlendMode.Modulate) },
             modifier = Modifier
                 .size(200.dp)
                 .scale(scaleX = scaleX, scaleY = 1f)

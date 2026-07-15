@@ -340,6 +340,56 @@ class GameViewModel(
         }
     }
     
+    fun purchaseFishSkin(skin: com.charles.virtualpet.fishtank.domain.model.FishSkin) {
+        _gameState.update { currentState ->
+            val state = currentState ?: GameState()
+            val currentCoins = state.economy.coins
+            val alreadyOwned = state.economy.inventoryItems.any { it.id == skin.id }
+
+            if (alreadyOwned) {
+                return@update state
+            }
+
+            if (currentCoins >= skin.price) {
+                val newInventory = state.economy.inventoryItems + InventoryItem(
+                    id = skin.id,
+                    name = skin.name,
+                    type = ItemType.SKIN,
+                    quantity = 1
+                )
+                val updatedState = state.copy(
+                    economy = state.economy.copy(
+                        coins = currentCoins - skin.price,
+                        inventoryItems = newInventory
+                    )
+                )
+                saveState(updatedState)
+                AnalyticsHelper.logBuyFishSkin(skin.id, skin.price)
+                updatedState
+            } else {
+                state
+            }
+        }
+    }
+
+    fun selectFishSkin(skinId: String) {
+        _gameState.update { currentState ->
+            val state = currentState ?: GameState()
+            val isOwned = skinId == "classic" || state.economy.inventoryItems.any { it.id == skinId }
+            if (!isOwned) {
+                return@update state
+            }
+            val updatedState = state.copy(
+                settings = state.settings.copy(
+                    selectedFishSkinId = skinId
+                )
+            )
+            saveState(updatedState)
+            AnalyticsHelper.logSelectFishSkin(skinId)
+            updatedState
+        }
+    }
+
     private fun trackPurchase(decoration: Decoration) {
         viewModelScope.launch {
             try {

@@ -14,6 +14,7 @@ data class InventoryItem(
 
 enum class ItemType {
     FOOD,
-    DECORATION
+    DECORATION,
+    SKIN
 }
 

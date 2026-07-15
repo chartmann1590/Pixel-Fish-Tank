@@ -124,6 +124,7 @@ fun TankScreen(
     onNavigateToPlacement: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
     onNavigateToRewards: () -> Unit = {},
+    onNavigateToFishSkins: () -> Unit = {},
     showGuidedTourOnStart: Boolean = false,
     modifier: Modifier = Modifier
 ) {
@@ -157,6 +158,14 @@ fun TankScreen(
     }
     val ownedDecorations = gameState.economy.inventoryItems
         .filter { it.type == com.charles.virtualpet.fishtank.domain.model.ItemType.DECORATION && it.quantity > 0 }
+
+    // Resolve the selected fish skin's tint color, if any
+    val fishTintColor = remember(gameState.settings.selectedFishSkinId) {
+        com.charles.virtualpet.fishtank.data.FishSkinCatalog
+            .getSkinById(gameState.settings.selectedFishSkinId)
+            ?.tintColorHex
+            ?.let { hex -> Color(android.graphics.Color.parseColor(hex)) }
+    }
 
     // Calculate fish mood
     val mood = MoodCalculator.calculateMood(fishState)
@@ -601,6 +610,7 @@ fun TankScreen(
                                     viewModel.removeDecoration(placedId)
                                 },
                                 decorationsLocked = gameState.settings.decorationsLocked,
+                                fishTintColor = fishTintColor,
                                 modifier = Modifier.fillMaxSize()
                             )
                         }
@@ -918,6 +928,11 @@ fun TankScreen(
                             onNavigateToStore()
                         }
                     }
+                ),
+                FABAction(
+                    label = "Fish Skins",
+                    iconRes = null,
+                    onClick = onNavigateToFishSkins
                 )
             ),
             onButtonBoundsCaptured = { buttonId, bounds ->

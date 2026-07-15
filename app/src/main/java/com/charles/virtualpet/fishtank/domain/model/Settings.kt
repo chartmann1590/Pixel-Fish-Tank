@@ -13,6 +13,7 @@ data class Settings(
     val sfxEnabled: Boolean = true,
     val bgMusicEnabled: Boolean = true,
     val hasCompletedTutorial: Boolean = false,
-    val decorationsLocked: Boolean = true // Lock decorations by default to prevent accidental removal
+    val decorationsLocked: Boolean = true, // Lock decorations by default to prevent accidental removal
+    val selectedFishSkinId: String = "classic"
 )
 

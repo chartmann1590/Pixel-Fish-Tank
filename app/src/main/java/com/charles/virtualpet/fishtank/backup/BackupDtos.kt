@@ -83,7 +83,8 @@ data class SettingsExport(
     val sfxEnabled: Boolean = true,
     val bgMusicEnabled: Boolean = true,
     val hasCompletedTutorial: Boolean = false,
-    val decorationsLocked: Boolean = true
+    val decorationsLocked: Boolean = true,
+    val selectedFishSkinId: String = "classic"
 )
 
 @Serializable

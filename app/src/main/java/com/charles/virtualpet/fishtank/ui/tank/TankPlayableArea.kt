@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntSize
@@ -34,6 +35,7 @@ fun TankPlayableArea(
     onPositionUpdate: (Float, Float) -> Unit,
     onRemoveDecoration: (String) -> Unit,
     decorationsLocked: Boolean = true,
+    fishTintColor: Color? = null,
     modifier: Modifier = Modifier
 ) {
     val density = LocalDensity.current
@@ -102,7 +104,8 @@ fun TankPlayableArea(
             mood = mood,
             onPositionUpdate = onPositionUpdate,
             nearbyFood = foodPositions,
-            onClick = onFishClick
+            onClick = onFishClick,
+            tintColor = fishTintColor
         )
         
         // Display falling food

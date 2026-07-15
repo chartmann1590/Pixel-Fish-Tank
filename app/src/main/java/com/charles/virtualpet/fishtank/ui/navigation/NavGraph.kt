@@ -23,6 +23,7 @@ import com.charles.virtualpet.fishtank.ui.minigame.memoryshells.MemoryShellsScre
 import com.charles.virtualpet.fishtank.ui.minigame.fishfollow.FishFollowScreen
 import com.charles.virtualpet.fishtank.ui.rewards.RewardsScreen
 import com.charles.virtualpet.fishtank.ui.settings.SettingsScreen
+import com.charles.virtualpet.fishtank.ui.skins.FishSkinsScreen
 import com.charles.virtualpet.fishtank.ui.store.DecorationPlacementScreen
 import com.charles.virtualpet.fishtank.ui.store.DecorationStoreScreen
 import com.charles.virtualpet.fishtank.ui.tank.TankScreen
@@ -46,6 +47,7 @@ sealed class Screen(val route: String) {
     object DecorationPlacement : Screen("decoration_placement")
     object Settings : Screen("settings")
     object Rewards : Screen("rewards")
+    object FishSkins : Screen("fish_skins")
 }
 
 @Composable
@@ -121,6 +123,9 @@ fun NavGraph(
                 },
                 onNavigateToRewards = {
                     navController.navigate(Screen.Rewards.route)
+                },
+                onNavigateToFishSkins = {
+                    navController.navigate(Screen.FishSkins.route)
                 },
                 showGuidedTourOnStart = showGuidedTour
             )
@@ -392,6 +397,15 @@ fun NavGraph(
         
         composable(Screen.Rewards.route) {
             RewardsScreen(
+                viewModel = viewModel,
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Screen.FishSkins.route) {
+            FishSkinsScreen(
                 viewModel = viewModel,
                 onBack = {
                     navController.popBackStack()

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-07-15
+
+### Added
+- **Fish Color Skins**: Unlock and equip new color variants for your fish
+  - Five skins: Classic (default), Ocean Blue, Coral Pink, Mint Green, and Royal Gold
+  - Classic is owned from the start; the rest are purchasable with coins (75-250)
+  - Accessible from a new "Fish Skins" button in the tank's action menu
+  - Equipped skin applies across all fish mood states and persists across sessions
+
 ## [1.1.0] - 2025-01-03
 
 ### Added
