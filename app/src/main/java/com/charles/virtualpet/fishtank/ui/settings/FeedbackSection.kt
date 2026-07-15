@@ -263,7 +263,6 @@ private fun ReportDialog(
     onDismiss: () -> Unit,
     onSubmit: (String, String, Boolean, String, String, Uri?) -> Unit
 ) {
-    val context = LocalContext.current
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var includeDiagnostics by remember { mutableStateOf(true) }
