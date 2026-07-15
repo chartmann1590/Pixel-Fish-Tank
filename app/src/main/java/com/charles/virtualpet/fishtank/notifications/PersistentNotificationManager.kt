@@ -18,6 +18,23 @@ class PersistentNotificationManager(private val context: Context) {
         const val ACTION_FEED = "com.charles.virtualpet.fishtank.ACTION_FEED"
         const val ACTION_CLEAN = "com.charles.virtualpet.fishtank.ACTION_CLEAN"
         const val ACTION_OPEN = "com.charles.virtualpet.fishtank.ACTION_OPEN"
+        const val EXTRA_TOKEN = "com.charles.virtualpet.fishtank.EXTRA_NOTIFICATION_TOKEN"
+
+        private const val PREFS_NAME = "notification_action_prefs"
+        private const val KEY_TOKEN = "action_token"
+
+        /**
+         * Per-install random token used to verify that ACTION_FEED/ACTION_CLEAN intents
+         * actually originated from our own notification, not a spoofed intent from another
+         * app targeting the exported MainActivity.
+         */
+        fun getOrCreateActionToken(context: Context): String {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            prefs.getString(KEY_TOKEN, null)?.let { return it }
+            val token = java.util.UUID.randomUUID().toString()
+            prefs.edit().putString(KEY_TOKEN, token).apply()
+            return token
+        }
     }
 
     /**
@@ -55,8 +72,10 @@ class PersistentNotificationManager(private val context: Context) {
         }
 
         // Create actions
+        val actionToken = getOrCreateActionToken(context)
         val feedIntent = Intent(context, MainActivity::class.java).apply {
             action = ACTION_FEED
+            putExtra(EXTRA_TOKEN, actionToken)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
         val feedPendingIntent = PendingIntent.getActivity(
@@ -68,6 +87,7 @@ class PersistentNotificationManager(private val context: Context) {
 
         val cleanIntent = Intent(context, MainActivity::class.java).apply {
             action = ACTION_CLEAN
+            putExtra(EXTRA_TOKEN, actionToken)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
         val cleanPendingIntent = PendingIntent.getActivity(

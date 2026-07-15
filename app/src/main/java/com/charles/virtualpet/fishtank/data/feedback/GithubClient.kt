@@ -40,6 +40,7 @@ object GithubClient {
         } else {
             HttpLoggingInterceptor.Level.NONE
         }
+        redactHeader("Authorization")
     }
 
     private val okHttpClient = OkHttpClient.Builder()

@@ -198,7 +198,17 @@ class MainActivity : ComponentActivity() {
         when (intent.action) {
             com.charles.virtualpet.fishtank.notifications.PersistentNotificationManager.ACTION_FEED,
             com.charles.virtualpet.fishtank.notifications.PersistentNotificationManager.ACTION_CLEAN -> {
-                pendingNotificationAction = intent.action
+                // MainActivity is exported (required, it's the launcher activity), so any app
+                // could otherwise send this action directly. Require a token only our own
+                // notification PendingIntents know to prevent spoofed feed/clean triggers.
+                val expectedToken = com.charles.virtualpet.fishtank.notifications.PersistentNotificationManager
+                    .getOrCreateActionToken(applicationContext)
+                val providedToken = intent.getStringExtra(
+                    com.charles.virtualpet.fishtank.notifications.PersistentNotificationManager.EXTRA_TOKEN
+                )
+                if (providedToken == expectedToken) {
+                    pendingNotificationAction = intent.action
+                }
             }
         }
     }
