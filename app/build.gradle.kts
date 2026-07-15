@@ -17,8 +17,8 @@ android {
         applicationId = "com.charles.virtualpet.fishtank"
         minSdk = 24
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1.0"
+        versionCode = (System.getenv("ANDROID_VERSION_CODE")?.toIntOrNull() ?: 2)
+        versionName = (System.getenv("ANDROID_VERSION_NAME") ?: "1.1.0")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

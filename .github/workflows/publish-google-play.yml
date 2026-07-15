@@ -1,0 +1,183 @@
+name: Publish to Google Play
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_play_publish:
+        description: 'Type "publish" to confirm submission to Google Play production'
+        required: true
+        type: string
+      release_notes:
+        description: 'Release notes for this version (leave blank to auto-generate)'
+        required: false
+        type: string
+
+jobs:
+  publish:
+    name: Build and Publish to Google Play
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Validate confirmation
+        if: github.event.inputs.confirm_play_publish != 'publish'
+        run: |
+          echo "::error::confirm_play_publish must be exactly 'publish' to proceed"
+          exit 1
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Compute version code and name
+        run: |
+          VERSION_CODE="$(date -u +'%y%j%H%M')"
+          VERSION_NAME="1.1.0.$(date -u +'%Y%m%d.%H%M')"
+          echo "ANDROID_VERSION_CODE=${VERSION_CODE}" >> $GITHUB_ENV
+          echo "ANDROID_VERSION_NAME=${VERSION_NAME}" >> $GITHUB_ENV
+          echo "Computed versionCode=${VERSION_CODE} versionName=${VERSION_NAME}"
+
+      - name: Decode google-services.json
+        env:
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+        run: |
+          if [ -z "$GOOGLE_SERVICES_JSON_BASE64" ]; then
+            echo "::error::GOOGLE_SERVICES_JSON_BASE64 secret is not set"
+            exit 1
+          fi
+          echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 -d > app/google-services.json
+          echo "google-services.json decoded"
+
+      - name: Decode release keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::KEYSTORE_BASE64 secret is not set"
+            exit 1
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > app/release.keystore
+          echo "release.keystore decoded"
+
+      - name: Create keystore.properties
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          cat > keystore.properties << EOF
+          storeFile=../app/release.keystore
+          storePassword=${KEYSTORE_PASSWORD}
+          keyAlias=${KEY_ALIAS}
+          keyPassword=${KEY_PASSWORD}
+          EOF
+          echo "keystore.properties created"
+
+      - name: Write gradle.properties secrets (AdMob)
+        env:
+          ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
+          ADMOB_BANNER_AD_UNIT_ID: ${{ secrets.ADMOB_BANNER_AD_UNIT_ID }}
+          ADMOB_REWARDED_INTERSTITIAL_AD_UNIT_ID: ${{ secrets.ADMOB_REWARDED_INTERSTITIAL_AD_UNIT_ID }}
+          ADMOB_INTERSTITIAL_AD_UNIT_ID: ${{ secrets.ADMOB_INTERSTITIAL_AD_UNIT_ID }}
+        run: |
+          {
+            echo "ADMOB_APP_ID=$ADMOB_APP_ID"
+            echo "ADMOB_BANNER_AD_UNIT_ID=$ADMOB_BANNER_AD_UNIT_ID"
+            echo "ADMOB_REWARDED_INTERSTITIAL_AD_UNIT_ID=$ADMOB_REWARDED_INTERSTITIAL_AD_UNIT_ID"
+            echo "ADMOB_INTERSTITIAL_AD_UNIT_ID=$ADMOB_INTERSTITIAL_AD_UNIT_ID"
+          } >> gradle.properties
+
+      - name: Write local.properties (GitHub Feedback Reporter secrets)
+        env:
+          FEEDBACK_GITHUB_API_TOKEN: ${{ secrets.FEEDBACK_GITHUB_API_TOKEN }}
+          FEEDBACK_GITHUB_REPO_OWNER: ${{ secrets.FEEDBACK_GITHUB_REPO_OWNER }}
+          FEEDBACK_GITHUB_REPO_NAME: ${{ secrets.FEEDBACK_GITHUB_REPO_NAME }}
+        run: |
+          {
+            echo "github.api.token=$FEEDBACK_GITHUB_API_TOKEN"
+            echo "github.repo.owner=$FEEDBACK_GITHUB_REPO_OWNER"
+            echo "github.repo.name=$FEEDBACK_GITHUB_REPO_NAME"
+          } >> local.properties
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Run lint
+        run: ./gradlew :app:lintRelease --stacktrace
+
+      - name: Run unit tests
+        run: ./gradlew :app:testReleaseUnitTest --stacktrace
+
+      - name: Build release AAB
+        run: ./gradlew :app:bundleRelease --stacktrace
+
+      - name: Generate release notes
+        run: |
+          mkdir -p distribution/whatsnew
+          NOTES_FILE="distribution/whatsnew/whatsnew-en-US"
+          if [ -n "${{ github.event.inputs.release_notes }}" ]; then
+            echo "${{ github.event.inputs.release_notes }}" > "$NOTES_FILE"
+          else
+            PREV_TAG="$(git describe --tags --abbrev=0 2>/dev/null)" || true
+            if [ -n "$PREV_TAG" ]; then
+              git log "${PREV_TAG}..HEAD" --pretty=format:"- %s" > "$NOTES_FILE"
+            fi
+            if [ ! -s "$NOTES_FILE" ] && [ -f app/src/main/play/listings/whats_new.txt ]; then
+              cp app/src/main/play/listings/whats_new.txt "$NOTES_FILE"
+            fi
+            if [ ! -s "$NOTES_FILE" ]; then
+              echo "Bug fixes and performance improvements." > "$NOTES_FILE"
+            fi
+          fi
+          echo "Release notes:"
+          cat "$NOTES_FILE"
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-aab
+          path: app/build/outputs/bundle/release/app-release.aab
+
+      - name: Upload mapping artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-mapping
+          path: app/build/outputs/mapping/release/mapping.txt
+        continue-on-error: true
+
+      - name: Verify service account JSON
+        env:
+          SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$SERVICE_ACCOUNT_JSON" ]; then
+            echo "::error::GOOGLE_PLAY_SERVICE_ACCOUNT_JSON secret is not set"
+            exit 1
+          fi
+          echo "GOOGLE_PLAY_SERVICE_ACCOUNT_JSON present"
+
+      - name: Publish to Google Play
+        uses: r0adkll/upload-google-play@v1.1.5
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.charles.virtualpet.fishtank
+          releaseFiles: app/build/outputs/bundle/release/app-release.aab
+          track: production
+          status: completed
+          whatsNewDirectory: distribution/whatsnew
+          mappingFile: app/build/outputs/mapping/release/mapping.txt
+
+      - name: Clean up sensitive files
+        if: always()
+        run: |
+          rm -f app/release.keystore keystore.properties app/google-services.json
+          sed -i '/^github\.api\.token=/d;/^github\.repo\.owner=/d;/^github\.repo\.name=/d' local.properties || true
