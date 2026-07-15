@@ -6,6 +6,7 @@ import android.os.Build
 import android.os.Environment
 import android.os.StatFs
 import android.app.ActivityManager
+import androidx.core.content.pm.PackageInfoCompat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -35,7 +36,7 @@ object DiagnosticsHelper {
             appendLine("- Package: ${context.packageName}")
             val packageInfo = appInfo.second
             if (packageInfo != null) {
-                appendLine("- Version: ${packageInfo.versionName} (${packageInfo.longVersionCode})")
+                appendLine("- Version: ${packageInfo.versionName} (${PackageInfoCompat.getLongVersionCode(packageInfo)})")
             }
             appendLine("- Device: ${Build.MODEL}")
             appendLine("- Manufacturer: ${Build.MANUFACTURER}")
