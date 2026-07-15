@@ -66,6 +66,7 @@ class GameStateRepository(private val context: Context) {
         val BG_MUSIC_ENABLED = booleanPreferencesKey("bg_music_enabled")
         val LAST_BACKUP_EPOCH = longPreferencesKey("last_backup_epoch")
         val HAS_COMPLETED_TUTORIAL = booleanPreferencesKey("has_completed_tutorial")
+        val DECORATIONS_LOCKED = booleanPreferencesKey("decorations_locked")
         val REWARDED_ADS_WATCHED_COUNT = intPreferencesKey("rewarded_ads_watched_count")
         val REWARDED_ADS_LAST_WATCH_TIME = longPreferencesKey("rewarded_ads_last_watch_time")
         val REWARDED_ADS_RESET_TIME = longPreferencesKey("rewarded_ads_reset_time")
@@ -123,6 +124,7 @@ class GameStateRepository(private val context: Context) {
             preferences[Keys.SFX_ENABLED] = gameState.settings.sfxEnabled
             preferences[Keys.BG_MUSIC_ENABLED] = gameState.settings.bgMusicEnabled
             preferences[Keys.HAS_COMPLETED_TUTORIAL] = gameState.settings.hasCompletedTutorial
+            preferences[Keys.DECORATIONS_LOCKED] = gameState.settings.decorationsLocked
         }
     }
 
@@ -377,7 +379,8 @@ class GameStateRepository(private val context: Context) {
             quietHoursEnd = preferences[Keys.QUIET_HOURS_END] ?: "08:00",
             sfxEnabled = preferences[Keys.SFX_ENABLED] ?: true,
             bgMusicEnabled = preferences[Keys.BG_MUSIC_ENABLED] ?: true,
-            hasCompletedTutorial = preferences[Keys.HAS_COMPLETED_TUTORIAL] ?: false
+            hasCompletedTutorial = preferences[Keys.HAS_COMPLETED_TUTORIAL] ?: false,
+            decorationsLocked = preferences[Keys.DECORATIONS_LOCKED] ?: true
         )
     }
 

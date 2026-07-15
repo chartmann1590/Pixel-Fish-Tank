@@ -5,6 +5,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.charles.virtualpet.fishtank.data.FirebaseStoreRepository
 import com.charles.virtualpet.fishtank.data.ImageCacheManager
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 
 class StoreSyncWorker(
     context: Context,
@@ -21,6 +22,7 @@ class StoreSyncWorker(
             
             Result.success()
         } catch (e: Exception) {
+            FirebaseCrashlytics.getInstance().recordException(e)
             Result.retry()
         }
     }

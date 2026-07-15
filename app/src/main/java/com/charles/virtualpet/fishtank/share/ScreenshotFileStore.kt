@@ -3,6 +3,7 @@ package com.charles.virtualpet.fishtank.share
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -47,9 +48,11 @@ object ScreenshotFileStore {
             Log.d("ScreenshotFileStore", "Screenshot saved: ${file.absolutePath}")
             file
         } catch (e: IOException) {
+            FirebaseCrashlytics.getInstance().recordException(e)
             Log.e("ScreenshotFileStore", "Failed to save screenshot", e)
             null
         } catch (e: Exception) {
+            FirebaseCrashlytics.getInstance().recordException(e)
             Log.e("ScreenshotFileStore", "Unexpected error saving screenshot", e)
             null
         }

@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.core.content.FileProvider
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import java.io.File
 
 /**
@@ -46,6 +47,7 @@ object ShareIntentFactory {
             // Wrap in chooser
             Intent.createChooser(shareIntent, null)
         } catch (e: Exception) {
+            FirebaseCrashlytics.getInstance().recordException(e)
             android.util.Log.e("ShareIntentFactory", "Failed to create share intent", e)
             null
         }

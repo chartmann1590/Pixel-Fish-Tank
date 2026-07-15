@@ -14,6 +14,7 @@ import com.charles.virtualpet.fishtank.widgets.WidgetUpdateHelper
 import com.charles.virtualpet.fishtank.notifications.NotificationScheduler
 import com.charles.virtualpet.fishtank.notifications.PersistentNotificationManager
 import com.charles.virtualpet.fishtank.analytics.AnalyticsHelper
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -359,6 +360,7 @@ class GameViewModel(
                 )
                 firestore.collection("purchases").add(purchaseData).await()
             } catch (e: Exception) {
+                FirebaseCrashlytics.getInstance().recordException(e)
                 // Silently fail - purchase tracking is not critical
                 android.util.Log.w("GameViewModel", "Failed to track purchase", e)
             }

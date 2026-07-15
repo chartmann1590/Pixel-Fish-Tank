@@ -270,6 +270,11 @@ fun SettingsScreen(
                 modifier = Modifier.padding(bottom = 20.dp)
             )
 
+            // Support & Feedback Card
+            FeedbackSection(
+                modifier = Modifier.padding(bottom = 20.dp)
+            )
+
             // About Card with gradient
             AboutCard(
                 modifier = Modifier.padding(bottom = 24.dp)

@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.charles.virtualpet.fishtank.domain.model.Decoration
 import com.charles.virtualpet.fishtank.domain.model.DecorationType
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QueryDocumentSnapshot
@@ -142,6 +143,7 @@ class FirebaseStoreRepository(
             
             Result.success(sortedItems)
         } catch (e: Exception) {
+            FirebaseCrashlytics.getInstance().recordException(e)
             // If sync fails, return cached data
             val cached = getCachedDecorations()
             
@@ -198,6 +200,7 @@ class FirebaseStoreRepository(
                     )
                 }
             } catch (e: Exception) {
+                FirebaseCrashlytics.getInstance().recordException(e)
                 e.printStackTrace()
                 null
             }
@@ -251,6 +254,7 @@ class FirebaseStoreRepository(
             _isLoadingMore.value = false
             Result.success(nextPage)
         } catch (e: Exception) {
+            FirebaseCrashlytics.getInstance().recordException(e)
             _isLoadingMore.value = false
             Result.failure(e)
         }

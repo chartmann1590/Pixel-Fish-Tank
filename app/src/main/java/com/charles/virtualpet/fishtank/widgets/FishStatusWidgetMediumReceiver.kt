@@ -9,6 +9,7 @@ import android.widget.RemoteViews
 import com.charles.virtualpet.fishtank.MainActivity
 import com.charles.virtualpet.fishtank.R
 import com.charles.virtualpet.fishtank.domain.model.FishMood
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -19,20 +20,26 @@ class FishStatusWidgetMediumReceiver : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
-        for (appWidgetId in appWidgetIds) {
-            updateAppWidget(context, appWidgetManager, appWidgetId)
+        val pendingResult = goAsync()
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                for (appWidgetId in appWidgetIds) {
+                    updateAppWidget(context, appWidgetManager, appWidgetId)
+                }
+            } finally {
+                pendingResult.finish()
+            }
         }
     }
 
-    private fun updateAppWidget(
+    private suspend fun updateAppWidget(
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetId: Int
     ) {
-        CoroutineScope(Dispatchers.Main).launch {
-            val views = RemoteViews(context.packageName, R.layout.widget_medium)
+        val views = RemoteViews(context.packageName, R.layout.widget_medium)
 
-            try {
+        try {
                 val reader = WidgetGameStateReader(context)
                 val gameState = reader.readGameState()
                 val derivedState = WidgetDerivedState.deriveForDisplay(gameState)
@@ -68,7 +75,7 @@ class FishStatusWidgetMediumReceiver : AppWidgetProvider() {
                 views.setTextViewText(R.id.widget_coins_text, "💰 ${derivedState.coins}")
 
             } catch (e: Exception) {
-                e.printStackTrace()
+                FirebaseCrashlytics.getInstance().recordException(e)
                 views.setTextViewText(R.id.widget_mood_text, "🐠 Fish Status")
                 views.setTextViewText(R.id.widget_level_text, "Tap to open app")
             }
@@ -84,7 +91,6 @@ class FishStatusWidgetMediumReceiver : AppWidgetProvider() {
             views.setOnClickPendingIntent(R.id.widget_fish_image, pendingIntent)
 
             appWidgetManager.updateAppWidget(appWidgetId, views)
-        }
     }
 
     private fun getMoodEmoji(mood: FishMood): String {

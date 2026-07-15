@@ -9,6 +9,7 @@ import android.widget.RemoteViews
 import com.charles.virtualpet.fishtank.MainActivity
 import com.charles.virtualpet.fishtank.R
 import com.charles.virtualpet.fishtank.domain.model.FishMood
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -19,57 +20,62 @@ class FishStatusWidgetSmallReceiver : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
-        for (appWidgetId in appWidgetIds) {
-            updateAppWidget(context, appWidgetManager, appWidgetId)
+        val pendingResult = goAsync()
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                for (appWidgetId in appWidgetIds) {
+                    updateAppWidget(context, appWidgetManager, appWidgetId)
+                }
+            } finally {
+                pendingResult.finish()
+            }
         }
     }
 
-    private fun updateAppWidget(
+    private suspend fun updateAppWidget(
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetId: Int
     ) {
-        CoroutineScope(Dispatchers.Main).launch {
-            val views = RemoteViews(context.packageName, R.layout.widget_small)
+        val views = RemoteViews(context.packageName, R.layout.widget_small)
 
-            try {
-                val reader = WidgetGameStateReader(context)
-                val gameState = reader.readGameState()
-                val derivedState = WidgetDerivedState.deriveForDisplay(gameState)
+        try {
+            val reader = WidgetGameStateReader(context)
+            val gameState = reader.readGameState()
+            val derivedState = WidgetDerivedState.deriveForDisplay(gameState)
 
-                // Set mood
-                val moodText = "${getMoodEmoji(derivedState.mood)} ${getMoodText(derivedState.mood)}"
-                views.setTextViewText(R.id.widget_mood_text, moodText)
-                views.setTextColor(R.id.widget_mood_text, getMoodColor(derivedState.mood))
+            // Set mood
+            val moodText = "${getMoodEmoji(derivedState.mood)} ${getMoodText(derivedState.mood)}"
+            views.setTextViewText(R.id.widget_mood_text, moodText)
+            views.setTextColor(R.id.widget_mood_text, getMoodColor(derivedState.mood))
 
-                // Set hunger with progress bar
-                val hungerInt = derivedState.hunger.toInt()
-                views.setProgressBar(R.id.widget_hunger_bar, 100, hungerInt, false)
-                views.setTextViewText(R.id.widget_hunger_text, "$hungerInt%")
+            // Set hunger with progress bar
+            val hungerInt = derivedState.hunger.toInt()
+            views.setProgressBar(R.id.widget_hunger_bar, 100, hungerInt, false)
+            views.setTextViewText(R.id.widget_hunger_text, "$hungerInt%")
 
-                // Set level and coins
-                views.setTextViewText(
-                    R.id.widget_level_coins,
-                    "Lv.${derivedState.level}  💰${derivedState.coins}"
-                )
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-                views.setTextViewText(R.id.widget_mood_text, "🐠 Tap to open")
-            }
-
-            // Set click intent
-            val intent = Intent(context, MainActivity::class.java)
-            val pendingIntent = PendingIntent.getActivity(
-                context,
-                0,
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            // Set level and coins
+            views.setTextViewText(
+                R.id.widget_level_coins,
+                "Lv.${derivedState.level}  💰${derivedState.coins}"
             )
-            views.setOnClickPendingIntent(R.id.widget_fish_image, pendingIntent)
 
-            appWidgetManager.updateAppWidget(appWidgetId, views)
+        } catch (e: Exception) {
+            FirebaseCrashlytics.getInstance().recordException(e)
+            views.setTextViewText(R.id.widget_mood_text, "🐠 Tap to open")
         }
+
+        // Set click intent
+        val intent = Intent(context, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        views.setOnClickPendingIntent(R.id.widget_fish_image, pendingIntent)
+
+        appWidgetManager.updateAppWidget(appWidgetId, views)
     }
 
     private fun getMoodEmoji(mood: FishMood): String {

@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Matrix
 import android.view.View
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 
 /**
  * Captures a screenshot of the tank playable area composable.
@@ -66,6 +67,7 @@ object TankScreenshotCapturer {
             
             bitmap
         } catch (e: Exception) {
+            FirebaseCrashlytics.getInstance().recordException(e)
             android.util.Log.e("TankScreenshotCapturer", "Failed to capture view", e)
             null
         }

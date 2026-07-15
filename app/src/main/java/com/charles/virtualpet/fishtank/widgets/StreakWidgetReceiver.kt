@@ -8,6 +8,7 @@ import android.content.Intent
 import android.widget.RemoteViews
 import com.charles.virtualpet.fishtank.MainActivity
 import com.charles.virtualpet.fishtank.R
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -18,17 +19,24 @@ class StreakWidgetReceiver : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
-        for (appWidgetId in appWidgetIds) {
-            updateAppWidget(context, appWidgetManager, appWidgetId)
+        val pendingResult = goAsync()
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                for (appWidgetId in appWidgetIds) {
+                    updateAppWidget(context, appWidgetManager, appWidgetId)
+                }
+            } finally {
+                pendingResult.finish()
+            }
         }
     }
 
-    private fun updateAppWidget(
+    private suspend fun updateAppWidget(
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetId: Int
     ) {
-        CoroutineScope(Dispatchers.Main).launch {
+        run {
             val views = RemoteViews(context.packageName, R.layout.widget_streak)
 
             try {
@@ -46,7 +54,7 @@ class StreakWidgetReceiver : AppWidgetProvider() {
                 )
 
             } catch (e: Exception) {
-                e.printStackTrace()
+                FirebaseCrashlytics.getInstance().recordException(e)
                 views.setTextViewText(R.id.widget_streak_count, "0")
                 views.setTextViewText(R.id.widget_longest_streak, "🏆 Best: 0 days")
             }

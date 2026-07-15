@@ -37,6 +37,21 @@ android {
         buildConfigField("String", "ADMOB_INTERSTITIAL_AD_UNIT_ID", "\"$admobInterstitialAdUnitId\"")
         
         manifestPlaceholders["ADMOB_APP_ID"] = admobAppId
+        
+        // GitHub Feedback Reporter configuration from local.properties
+        val localProperties = Properties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localPropertiesFile.inputStream().use { localProperties.load(it) }
+        }
+        val githubApiToken = localProperties.getProperty("github.api.token") ?: ""
+        val githubRepoOwner = localProperties.getProperty("github.repo.owner") ?: ""
+        val githubRepoName = localProperties.getProperty("github.repo.name") ?: ""
+        
+        buildConfigField("String", "GITHUB_API_TOKEN", "\"$githubApiToken\"")
+        buildConfigField("String", "GITHUB_REPO_OWNER", "\"$githubRepoOwner\"")
+        buildConfigField("String", "GITHUB_REPO_NAME", "\"$githubRepoName\"")
+        buildConfigField("String", "FEEDBACK_ASSETS_DIR", "\"feedback-assets\"")
     }
 
     // Load keystore properties
@@ -144,6 +159,12 @@ dependencies {
 
     // AdMob
     implementation("com.google.android.gms:play-services-ads:22.6.0")
+
+    // GitHub Feedback Reporter - Networking
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
     // Testing
     testImplementation("junit:junit:4.13.2")

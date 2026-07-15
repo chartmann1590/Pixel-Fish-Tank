@@ -9,7 +9,10 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.FirebaseApp
@@ -40,6 +43,7 @@ import com.charles.virtualpet.fishtank.share.ScreenshotFileStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -48,6 +52,7 @@ class MainActivity : ComponentActivity() {
     private val notificationPrefs: NotificationPrefs by lazy { NotificationPrefs(applicationContext) }
     private val persistentNotificationManager = PersistentNotificationManager(this)
     private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private var pendingNotificationAction by mutableStateOf<String?>(null)
     
     // Store repository
     private val imageCacheManager by lazy { ImageCacheManager(this) }
@@ -117,7 +122,17 @@ class MainActivity : ComponentActivity() {
                 )
                 val repository = GameStateRepository(this@MainActivity)
                 val navController = rememberNavController()
-                
+
+                LaunchedEffect(pendingNotificationAction) {
+                    when (pendingNotificationAction) {
+                        com.charles.virtualpet.fishtank.notifications.PersistentNotificationManager.ACTION_FEED -> viewModel.feedFish()
+                        com.charles.virtualpet.fishtank.notifications.PersistentNotificationManager.ACTION_CLEAN -> viewModel.cleanTank()
+                    }
+                    if (pendingNotificationAction != null) {
+                        pendingNotificationAction = null
+                    }
+                }
+
                 NavGraph(
                     navController = navController,
                     viewModel = viewModel,
@@ -165,6 +180,7 @@ class MainActivity : ComponentActivity() {
     
     override fun onDestroy() {
         super.onDestroy()
+        coroutineScope.cancel()
         sfxManager?.release()
         sfxManager = null
         bgMusicManager?.release()
@@ -179,9 +195,12 @@ class MainActivity : ComponentActivity() {
     
     private fun handleNotificationAction(intent: android.content.Intent?) {
         if (intent == null) return
-        val action = intent.action
-        // Actions open the app - user can manually feed/clean from the tank screen
-        // Future enhancement: could auto-trigger feed/clean actions here
+        when (intent.action) {
+            com.charles.virtualpet.fishtank.notifications.PersistentNotificationManager.ACTION_FEED,
+            com.charles.virtualpet.fishtank.notifications.PersistentNotificationManager.ACTION_CLEAN -> {
+                pendingNotificationAction = intent.action
+            }
+        }
     }
     
     private fun scheduleStoreSyncWorker() {

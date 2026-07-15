@@ -14,6 +14,7 @@ import com.charles.virtualpet.fishtank.domain.model.PlacedDecoration
 import com.charles.virtualpet.fishtank.domain.model.Settings
 import com.charles.virtualpet.fishtank.domain.model.TankLayout
 import com.charles.virtualpet.fishtank.ui.minigame.MiniGameType
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.Dispatchers
@@ -71,6 +72,7 @@ class BackupRepository(private val context: Context) {
                 )
             }
         } catch (e: Exception) {
+            FirebaseCrashlytics.getInstance().recordException(e)
             // If Firestore fetch fails, continue without purchases
             android.util.Log.w("BackupRepository", "Failed to fetch purchases", e)
             emptyList()
@@ -107,21 +109,23 @@ class BackupRepository(private val context: Context) {
                 
                 Result.success(Unit)
             } catch (e: Exception) {
+                FirebaseCrashlytics.getInstance().recordException(e)
                 Result.failure(e)
             }
         }
     }
-    
+
     suspend fun readBackupFromUri(uri: Uri): Result<BackupEnvelope> {
         return withContext(Dispatchers.IO) {
             try {
                 val jsonString = context.contentResolver.openInputStream(uri)?.use { inputStream: InputStream ->
                     inputStream.bufferedReader(Charsets.UTF_8).readText()
                 } ?: return@withContext Result.failure(Exception("Failed to open input stream"))
-                
+
                 val envelope = BackupSerializer.deserialize(jsonString)
                 Result.success(envelope)
             } catch (e: Exception) {
+                FirebaseCrashlytics.getInstance().recordException(e)
                 Result.failure(e)
             }
         }
@@ -168,13 +172,15 @@ class BackupRepository(private val context: Context) {
                         firestore.collection("purchases").add(purchaseData).await()
                     }
                 } catch (e: Exception) {
+                    FirebaseCrashlytics.getInstance().recordException(e)
                     // Log but don't fail the restore - purchases are optional
                     android.util.Log.w("BackupRepository", "Failed to restore purchases", e)
                 }
             }
-            
+
             Result.success(Unit)
         } catch (e: Exception) {
+            FirebaseCrashlytics.getInstance().recordException(e)
             Result.failure(e)
         }
     }

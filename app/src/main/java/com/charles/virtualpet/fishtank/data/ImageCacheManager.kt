@@ -1,6 +1,7 @@
 package com.charles.virtualpet.fishtank.data
 
 import android.content.Context
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -43,7 +44,7 @@ class ImageCacheManager(private val context: Context) {
             
             cachedFile.absolutePath
         } catch (e: Exception) {
-            e.printStackTrace()
+            FirebaseCrashlytics.getInstance().recordException(e)
             null
         }
     }

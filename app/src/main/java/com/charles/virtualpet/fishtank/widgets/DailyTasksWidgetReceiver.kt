@@ -11,6 +11,7 @@ import android.widget.RemoteViews
 import com.charles.virtualpet.fishtank.MainActivity
 import com.charles.virtualpet.fishtank.R
 import com.charles.virtualpet.fishtank.domain.model.DailyTask
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -21,17 +22,24 @@ class DailyTasksWidgetReceiver : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
-        for (appWidgetId in appWidgetIds) {
-            updateAppWidget(context, appWidgetManager, appWidgetId)
+        val pendingResult = goAsync()
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                for (appWidgetId in appWidgetIds) {
+                    updateAppWidget(context, appWidgetManager, appWidgetId)
+                }
+            } finally {
+                pendingResult.finish()
+            }
         }
     }
 
-    private fun updateAppWidget(
+    private suspend fun updateAppWidget(
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetId: Int
     ) {
-        CoroutineScope(Dispatchers.Main).launch {
+        run {
             val views = RemoteViews(context.packageName, R.layout.widget_daily_tasks)
 
             try {
@@ -96,7 +104,7 @@ class DailyTasksWidgetReceiver : AppWidgetProvider() {
                 }
 
             } catch (e: Exception) {
-                e.printStackTrace()
+                FirebaseCrashlytics.getInstance().recordException(e)
                 views.setTextViewText(R.id.widget_tasks_completed, "0/0")
                 views.setTextViewText(R.id.widget_tasks_footer, "Tap to open app")
             }
