@@ -15,6 +15,21 @@ The production build supports:
 
 Game play remains available if Play Games authentication or networking fails.
 
+## Cloud saves, Recall, and Analytics
+
+- The `pixel_fish_tank_autosave` Saved Games slot synchronizes after sign-in,
+  after three minutes of settled progress, and when the app enters the background.
+- Conflicts keep the save with the highest fish level and XP. Players can save,
+  restore, or manage the slot from Settings.
+- Every commit includes a progress cover image, description, progress value, and
+  accumulated played time.
+- Recall links the Play Games profile to a pseudonymous Firebase account. The
+  Android client requests a Recall session and a free-tier Cloudflare Worker
+  stores only a SHA-256 token lookup before issuing a Firebase custom token
+  during recovery. No Firebase billing plan is required.
+- Firebase Analytics records cloud-save and Recall outcomes and associates events
+  with the pseudonymous Play Games player ID.
+
 ## Play Console resources
 
 The production workflow creates or reuses these achievements through the Play Games Services Publishing API. `Mini-game Veteran` is incremental with 25 steps; the others are standard achievements. Draft achievements do not appear in Sidekick.

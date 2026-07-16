@@ -368,6 +368,41 @@ private fun PlayGamesCard(
                         Text("Leaderboards")
                     }
                 }
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = status.cloudSaveMessage,
+                    style = MaterialTheme.typography.bodySmall
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Button(
+                        onClick = playGamesManager::saveCloudNow,
+                        enabled = status.cloudSaveState != "syncing",
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Save now")
+                    }
+                    Button(
+                        onClick = playGamesManager::restoreCloudNow,
+                        enabled = status.cloudSaveState != "syncing",
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Restore")
+                    }
+                }
+                TextButton(
+                    onClick = playGamesManager::showCloudSaves,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Manage Play Games cloud save")
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = status.recallMessage,
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
         }
     }

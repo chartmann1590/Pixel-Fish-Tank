@@ -76,6 +76,11 @@ android {
             "PLAY_GAMES_CONFIGURED",
             (playGamesAppId != "0" && playGamesResourceValues.values.all(String::isNotBlank)).toString()
         )
+        buildConfigField(
+            "String",
+            "PLAY_GAMES_RECALL_URL",
+            "\"${playGamesValue("PLAY_GAMES_RECALL_URL", "https://pixel-fish-tank-recall.charles-h-hartmann1.workers.dev")}\""
+        )
         
         // GitHub Feedback Reporter configuration from local.properties
         val localProperties = Properties()
@@ -192,6 +197,7 @@ dependencies {
     implementation("com.google.firebase:firebase-perf-ktx")
     implementation("com.google.firebase:firebase-analytics-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-auth-ktx")
 
     // Image Loading
     implementation("io.coil-kt:coil-compose:2.5.0")

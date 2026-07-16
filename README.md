@@ -182,6 +182,7 @@ Virtual_Pet/
 - **Data Persistence**: DataStore Preferences
 - **Navigation**: Navigation Compose
 - **Firebase**: Crashlytics, Analytics, Messaging, Performance
+- **Google Play Games cloud**: automatic Saved Games sync and Recall account recovery
 - **Build System**: Gradle with Kotlin DSL
 
 ## 📊 Architecture

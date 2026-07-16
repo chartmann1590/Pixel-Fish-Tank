@@ -152,6 +152,31 @@ object AnalyticsHelper {
         logEvent("backup_import", mapOf("success" to success))
     }
 
+    fun logCloudSave(operation: String, success: Boolean, automatic: Boolean) {
+        logEvent(
+            "cloud_save",
+            mapOf(
+                "operation" to operation,
+                "success" to success,
+                "automatic" to automatic
+            )
+        )
+    }
+
+    fun logRecall(operation: String, success: Boolean) {
+        logEvent("play_games_recall", mapOf("operation" to operation, "success" to success))
+    }
+
+    fun setPlayGamesPlayer(playerId: String, level: Int? = null) {
+        firebaseAnalytics?.setUserId(playerId)
+        firebaseAnalytics?.setUserProperty("play_games_connected", "true")
+        level?.let { firebaseAnalytics?.setUserProperty("fish_level", it.toString()) }
+    }
+
+    fun setFishLevel(level: Int) {
+        firebaseAnalytics?.setUserProperty("fish_level", level.toString())
+    }
+
     // App Lifecycle Events
     fun logAppOpen() {
         logEvent("app_open")
