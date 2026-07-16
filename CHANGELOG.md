@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added Play Games connection, achievements, and leaderboards to Settings.
 - Added production validation for Sidekick and Play Games configuration.
 - Added automatic and manual Google Play Games Saved Games backup with progress-based conflict resolution.
-- Added Play Games Recall account recovery backed by Firebase Authentication and secure Cloud Functions.
+- Added Play Games Recall account recovery backed by Firebase Authentication and a free-tier Cloudflare Worker.
 - Linked Firebase Analytics to Google Play and added cloud-save and Recall analytics events.
 
 ## [1.2.0] - 2026-07-15

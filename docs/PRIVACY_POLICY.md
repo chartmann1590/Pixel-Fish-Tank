@@ -21,7 +21,7 @@ When you connect Google Play Games, the App also synchronizes a portable copy of
 
 ### Google Play Games Services
 
-If you use Google Play Games, Google processes your Play Games profile identifier, achievements, leaderboard scores, and cloud-saved game progress. The App uses Play Games Recall to associate your Play Games profile with a pseudonymous Firebase account identifier. This allows the same in-game identity to be recovered after reinstalling the App. Recall tokens are generated randomly and do not contain your name, email address, or game progress.
+If you use Google Play Games, Google processes your Play Games profile identifier, achievements, leaderboard scores, and cloud-saved game progress. The App uses Play Games Recall to associate your Play Games profile with a pseudonymous Firebase account identifier. This allows the same in-game identity to be recovered after reinstalling the App. Recall tokens are cryptographically generated and do not contain your name, email address, or game progress.
 
 ### Automatically Collected Information
 The App uses Firebase services which may collect certain information automatically:
@@ -74,6 +74,8 @@ Firebase services are provided by Google and are subject to [Google's Privacy Po
 
 Google Play Games Services is also provided by Google and is subject to Google's Privacy Policy and the Play Games profile and privacy controls available in your Google settings.
 
+The Recall API gateway is hosted on Cloudflare Workers and stores a one-way token lookup in Cloudflare Workers KV. Cloudflare processes these requests according to [Cloudflare's Privacy Policy](https://www.cloudflare.com/privacypolicy/).
+
 ## Data Security
 
 - Local game data remains on your device unless you connect Google Play Games
@@ -113,9 +115,11 @@ You can disable notifications at any time through:
 ## Third-Party Services
 
 The App uses the following third-party services:
-- **Google Firebase**: Analytics, Authentication, Cloud Functions, Crashlytics, Cloud Messaging
+- **Google Firebase**: Analytics, Authentication, Crashlytics, Cloud Messaging
   - Privacy Policy: https://policies.google.com/privacy
   - Terms of Service: https://firebase.google.com/terms
+- **Cloudflare**: Recall API hosting and token lookup storage
+  - Privacy Policy: https://www.cloudflare.com/privacypolicy/
 
 ## Changes to This Privacy Policy
 

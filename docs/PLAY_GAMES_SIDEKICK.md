@@ -24,8 +24,9 @@ Game play remains available if Play Games authentication or networking fails.
 - Every commit includes a progress cover image, description, progress value, and
   accumulated played time.
 - Recall links the Play Games profile to a pseudonymous Firebase account. The
-  Android client requests a Recall session and the Firebase backend stores only a
-  SHA-256 token lookup before issuing a Firebase custom token during recovery.
+  Android client requests a Recall session and a free-tier Cloudflare Worker
+  stores only a SHA-256 token lookup before issuing a Firebase custom token
+  during recovery. No Firebase billing plan is required.
 - Firebase Analytics records cloud-save and Recall outcomes and associates events
   with the pseudonymous Play Games player ID.
 

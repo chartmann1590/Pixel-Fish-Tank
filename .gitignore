@@ -139,6 +139,10 @@ node_modules/
 package-lock.json
 !firebase.json
 !functions/package-lock.json
+!worker/package-lock.json
+
+# Recall backend deployment credentials must never be committed
+worker/*service-account*.json
 
 # CORS configuration (may contain environment-specific settings)
 cors.json
