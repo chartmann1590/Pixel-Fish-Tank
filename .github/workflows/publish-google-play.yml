@@ -121,6 +121,12 @@ jobs:
       - name: Validate and write Play Games Services configuration
         run: |
           test -s play-games.properties
+          for name in PGS_APP_ID PGS_ACH_FIRST_FEED PGS_ACH_SPARKLING_CLEAN PGS_ACH_FIRST_MINIGAME PGS_ACH_HIGH_SCORE PGS_ACH_LEVEL_5 PGS_ACH_LEVEL_10 PGS_ACH_STREAK_3 PGS_ACH_STREAK_7 PGS_ACH_DECORATOR PGS_ACH_COLLECTOR PGS_ACH_MINIGAME_VETERAN PGS_LB_BUBBLE_POP PGS_LB_TIMING_BAR PGS_LB_CLEANUP_RUSH PGS_LB_FOOD_DROP PGS_LB_MEMORY_SHELLS PGS_LB_FISH_FOLLOW; do
+            grep -q "^${name}=." play-games.properties || {
+              echo "::error::Generated Play Games configuration is missing $name"
+              exit 1
+            }
+          done
           cat play-games.properties >> gradle.properties
 
       - name: Write local.properties (GitHub Feedback Reporter secrets)

@@ -48,7 +48,7 @@ android {
         val playGamesAppId = playGamesValue("PGS_APP_ID", "0")
         resValue("string", "game_services_project_id", playGamesAppId)
 
-        listOf(
+        val playGamesResourceNames = listOf(
             "PGS_ACH_FIRST_FEED",
             "PGS_ACH_SPARKLING_CLEAN",
             "PGS_ACH_FIRST_MINIGAME",
@@ -66,10 +66,16 @@ android {
             "PGS_LB_FOOD_DROP",
             "PGS_LB_MEMORY_SHELLS",
             "PGS_LB_FISH_FOLLOW"
-        ).forEach { name ->
+        )
+        val playGamesResourceValues = playGamesResourceNames.associateWith(::playGamesValue)
+        playGamesResourceNames.forEach { name ->
             buildConfigField("String", name, "\"${playGamesValue(name)}\"")
         }
-        buildConfigField("boolean", "PLAY_GAMES_CONFIGURED", (playGamesAppId != "0").toString())
+        buildConfigField(
+            "boolean",
+            "PLAY_GAMES_CONFIGURED",
+            (playGamesAppId != "0" && playGamesResourceValues.values.all(String::isNotBlank)).toString()
+        )
         
         // GitHub Feedback Reporter configuration from local.properties
         val localProperties = Properties()
