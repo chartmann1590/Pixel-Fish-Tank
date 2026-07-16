@@ -11,6 +11,10 @@ on:
         description: 'Release notes for this version (leave blank to auto-generate)'
         required: false
         type: string
+      confirm_sidekick_enabled:
+        description: 'Type "sidekick-enabled" after enabling automatic Sidekick injection in Play Console'
+        required: true
+        type: string
 
 jobs:
   publish:
@@ -20,9 +24,9 @@ jobs:
 
     steps:
       - name: Validate confirmation
-        if: github.event.inputs.confirm_play_publish != 'publish'
+        if: github.event.inputs.confirm_play_publish != 'publish' || github.event.inputs.confirm_sidekick_enabled != 'sidekick-enabled'
         run: |
-          echo "::error::confirm_play_publish must be exactly 'publish' to proceed"
+          echo "::error::Production publishing requires both 'publish' and 'sidekick-enabled' confirmations"
           exit 1
 
       - name: Checkout
@@ -35,6 +39,26 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Google Play API clients
+        run: pip install --quiet google-api-python-client google-auth
+
+      - name: Create or reuse Play Games achievements and leaderboards
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          PGS_APP_ID: ${{ vars.PGS_APP_ID }}
+          PGS_PROPERTIES_FILE: play-games.properties
+        run: |
+          if [ -z "$PGS_APP_ID" ]; then
+            echo "::error::Repository variable PGS_APP_ID is not configured"
+            exit 1
+          fi
+          python .github/ci-scripts/configure_play_games.py
 
       - name: Compute version code and name
         run: |
@@ -93,6 +117,11 @@ jobs:
             echo "ADMOB_REWARDED_INTERSTITIAL_AD_UNIT_ID=$ADMOB_REWARDED_INTERSTITIAL_AD_UNIT_ID"
             echo "ADMOB_INTERSTITIAL_AD_UNIT_ID=$ADMOB_INTERSTITIAL_AD_UNIT_ID"
           } >> gradle.properties
+
+      - name: Validate and write Play Games Services configuration
+        run: |
+          test -s play-games.properties
+          cat play-games.properties >> gradle.properties
 
       - name: Write local.properties (GitHub Feedback Reporter secrets)
         env:
@@ -176,14 +205,6 @@ jobs:
           whatsNewDirectory: distribution/whatsnew
           mappingFile: app/build/outputs/mapping/release/mapping.txt
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install Play Developer API client
-        run: pip install --quiet google-api-python-client google-auth
-
       - name: Update Play Store listing (title, descriptions, screenshots)
         env:
           GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
@@ -194,4 +215,5 @@ jobs:
         if: always()
         run: |
           rm -f app/release.keystore keystore.properties app/google-services.json
+          rm -f play-games.properties
           sed -i '/^github\.api\.token=/d;/^github\.repo\.owner=/d;/^github\.repo\.name=/d' local.properties || true

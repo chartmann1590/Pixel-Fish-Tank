@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Integrated Google Play Games Services v2 for Play Games Sidekick.
+- Added 11 achievement hooks and six global mini-game leaderboards.
+- Added Play Games connection, achievements, and leaderboards to Settings.
+- Added production validation for Sidekick and Play Games configuration.
+
 ## [1.2.0] - 2026-07-15
 
 ### Added

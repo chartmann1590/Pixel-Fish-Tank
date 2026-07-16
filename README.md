@@ -16,6 +16,16 @@ Watch Pixel Fish Tank in action! See all the features, gameplay, and adorable pi
 
 </div>
 
+## Google Play Games and Sidekick
+
+- Play Games Services v2 automatic platform authentication
+- Sidekick-visible achievements for care, progression, streaks, collecting, and mini-games
+- Global leaderboards for all six mini-games
+- Native achievement and leaderboard screens in Settings
+- Production safeguards that require complete Play Games resource configuration
+
+See [Play Games Sidekick release setup](docs/PLAY_GAMES_SIDEKICK.md) for the Play Console checklist.
+
 ## 📸 Screenshots
 
 <div align="center">
