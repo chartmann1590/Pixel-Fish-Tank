@@ -318,7 +318,7 @@ If your fish's stats don't seem to be updating:
 
 If your fish's progress seems to have reset:
 
-**Important:** Pixel Fish Tank stores all data locally on your device.
+**Important:** Pixel Fish Tank stores data locally and automatically syncs a cloud save when Google Play Games is connected.
 
 **Possible causes:**
 1. **App was uninstalled** - Uninstalling removes all local data
@@ -330,10 +330,11 @@ If your fish's progress seems to have reset:
 - **Don't uninstall** the app if you want to keep progress
 - **Don't clear app data** in Android settings
 - **Keep device storage free** - Ensure you have enough space
-- **Regular backups** - Future versions may support backup/restore
+- **Connect Play Games** - Cloud saves protect progress across reinstalls and devices
+- **Manual backups** - Settings also provides JSON export/import
 
 **Recovery:**
-Unfortunately, if data is lost, it cannot be recovered in v1. Future versions may include backup features.
+Open Settings > Google Play Games and choose Restore. You can also import a previously exported JSON backup.
 
 ---
 
@@ -630,26 +631,15 @@ Found a bug? Here's how to report it:
 
 ---
 
-### Data Backup and Restore (Future Feature)
+### Data Backup and Restore
 **Category:** Technical Support  
 **Tags:** backup, restore, data, cloud
 
-**Current status (v1):**
-- All data is stored locally on your device
-- No cloud backup available yet
-- Uninstalling the app will delete your progress
-
-**Future plans:**
-- Manual backup/restore via Google Drive
-- Export/import save data (JSON file)
-- Optional cloud sync
-
-**Until then:**
-- Don't uninstall the app if you want to keep progress
-- Don't clear app data in Android settings
-- Keep your device storage healthy
-
-**We're working on it!** Backup features are planned for future updates.
+**Current options:**
+- Automatic Play Games Saved Games sync every few minutes
+- Save Now and Restore controls under Settings > Google Play Games
+- Manual JSON export/import under Backup & Restore
+- Conflict resolution keeps the save with the highest game progress
 
 ---
 
@@ -658,13 +648,13 @@ Found a bug? Here's how to report it:
 **Tags:** FAQ, common questions
 
 **Q: Do I need internet to play?**  
-A: No! Pixel Fish Tank works completely offline. All data is stored on your device.
+A: Core play works offline. Internet is needed for cloud saves, Play Games, store content, and Firebase services.
 
 **Q: Can I have multiple fish?**  
 A: Not in v1, but multiple tanks may be added in future updates.
 
 **Q: Will my progress transfer to a new device?**  
-A: Not in v1. Future versions may include backup/restore features.
+A: Yes. Connect the same Play Games profile and the app restores the highest-progress cloud save.
 
 **Q: Is the app free?**  
 A: Check the app store listing for current pricing information.
@@ -715,5 +705,5 @@ Join the Pixel Fish Tank community:
 
 ## Analytics & Privacy
 
-Pixel Fish Tank uses Firebase Analytics to help us understand how players interact with the game. This helps us improve features and fix issues. All analytics data is anonymous and does not include personal information. You can learn more in our [Privacy Policy](PRIVACY_POLICY.md).
+Pixel Fish Tank uses Firebase Analytics to help us understand how players interact with the game. Analytics uses a pseudonymous player identifier when Play Games is connected and does not include the player's real name or email address. You can learn more in our [Privacy Policy](PRIVACY_POLICY.md).
 

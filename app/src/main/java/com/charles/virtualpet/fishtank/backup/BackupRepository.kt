@@ -25,6 +25,39 @@ import java.io.InputStream
 import java.io.OutputStream
 
 class BackupRepository(private val context: Context) {
+
+    /**
+     * Builds the portable payload used by Play Games Saved Games. Purchase
+     * records are deliberately excluded: owned inventory is already part of
+     * [GameState], while replaying Firestore purchase records could duplicate
+     * transactions when a save is restored on another device.
+     */
+    suspend fun createCloudSaveEnvelope(
+        gameState: GameState,
+        repository: GameStateRepository
+    ): BackupEnvelope = withContext(Dispatchers.IO) {
+        val minigameScores = MinigameScoresExport(
+            bubblePop = repository.getHighScore(MiniGameType.BUBBLE_POP).first(),
+            timingBar = repository.getHighScore(MiniGameType.TIMING_BAR).first(),
+            cleanupRush = repository.getHighScore(MiniGameType.CLEANUP_RUSH).first(),
+            foodDrop = repository.getHighScore(MiniGameType.FOOD_DROP).first(),
+            memoryShells = repository.getHighScore(MiniGameType.MEMORY_SHELLS).first(),
+            fishFollow = repository.getHighScore(MiniGameType.FISH_FOLLOW).first()
+        )
+
+        BackupEnvelope(
+            exportedAtEpoch = System.currentTimeMillis(),
+            data = GameStateExport(
+                fishState = gameState.fishState.toFishStateExport(),
+                economy = gameState.economy.toEconomyExport(),
+                tankLayout = gameState.tankLayout.toTankLayoutExport(),
+                dailyTasks = gameState.dailyTasks.toDailyTasksStateExport(),
+                settings = gameState.settings.toSettingsExport(),
+                minigameScores = minigameScores,
+                purchaseHistory = PurchaseHistoryExport()
+            )
+        )
+    }
     
     suspend fun exportCurrentState(
         gameState: GameState,

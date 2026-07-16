@@ -137,6 +137,8 @@ listing/
 # Node modules
 node_modules/
 package-lock.json
+!firebase.json
+!functions/package-lock.json
 
 # CORS configuration (may contain environment-specific settings)
 cors.json

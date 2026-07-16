@@ -67,7 +67,8 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private val playGamesManager by lazy { PlayGamesManager(this) }
+    private val gameStateRepository by lazy { GameStateRepository(applicationContext) }
+    private val playGamesManager by lazy { PlayGamesManager(this, gameStateRepository) }
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -128,7 +129,7 @@ class MainActivity : ComponentActivity() {
                 val viewModel: GameViewModel = viewModel(
                     factory = GameViewModelFactory(this@MainActivity)
                 )
-                val repository = GameStateRepository(this@MainActivity)
+                val repository = gameStateRepository
                 val navController = rememberNavController()
                 val gameState by viewModel.gameState.collectAsStateWithLifecycle()
                 val playGamesStatus by playGamesManager.status.collectAsStateWithLifecycle()
@@ -180,6 +181,7 @@ class MainActivity : ComponentActivity() {
     
     override fun onPause() {
         super.onPause()
+        playGamesManager.flushCloudSave()
         bgMusicManager?.pause()
         com.charles.virtualpet.fishtank.analytics.AnalyticsHelper.logAppBackground()
     }
@@ -201,12 +203,19 @@ class MainActivity : ComponentActivity() {
         sfxManager = null
         bgMusicManager?.release()
         bgMusicManager = null
+        playGamesManager.close()
     }
     
     override fun onNewIntent(intent: android.content.Intent?) {
         super.onNewIntent(intent)
         setIntent(intent)
         handleNotificationAction(intent)
+    }
+
+    @Deprecated("Delegates the Play Games Saved Games result to its SDK client")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: android.content.Intent?) {
+        if (playGamesManager.handleActivityResult(requestCode, resultCode, data)) return
+        super.onActivityResult(requestCode, resultCode, data)
     }
     
     private fun handleNotificationAction(intent: android.content.Intent?) {

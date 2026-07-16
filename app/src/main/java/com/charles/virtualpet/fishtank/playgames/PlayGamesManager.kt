@@ -3,6 +3,8 @@ package com.charles.virtualpet.fishtank.playgames
 import android.app.Activity
 import android.util.Log
 import com.charles.virtualpet.fishtank.BuildConfig
+import com.charles.virtualpet.fishtank.analytics.AnalyticsHelper
+import com.charles.virtualpet.fishtank.data.GameStateRepository
 import com.charles.virtualpet.fishtank.domain.model.GameState
 import com.charles.virtualpet.fishtank.ui.minigame.MiniGameResult
 import com.charles.virtualpet.fishtank.ui.minigame.MiniGameType
@@ -16,7 +18,11 @@ import kotlinx.coroutines.flow.asStateFlow
 data class PlayGamesStatus(
     val isConfigured: Boolean = BuildConfig.PLAY_GAMES_CONFIGURED,
     val isAuthenticated: Boolean = false,
-    val playerName: String? = null
+    val playerName: String? = null,
+    val cloudSaveState: String = "idle",
+    val cloudSaveMessage: String = "Cloud save is waiting for Play Games",
+    val recallState: String = "idle",
+    val recallMessage: String = "Recall is waiting for Play Games"
 )
 
 /**
@@ -24,12 +30,27 @@ data class PlayGamesStatus(
  * All operations are best-effort so game play is never blocked by sign-in or
  * network failures.
  */
-class PlayGamesManager(private val activity: Activity) {
+class PlayGamesManager(
+    private val activity: Activity,
+    repository: GameStateRepository
+) {
     private val _status = MutableStateFlow(PlayGamesStatus())
     val status: StateFlow<PlayGamesStatus> = _status.asStateFlow()
 
     private val submittedThisSession = mutableSetOf<String>()
     private val pendingMiniGameResults = mutableListOf<MiniGameResult>()
+    private val cloudSave = PlayGamesCloudSave(activity, repository) { state, message ->
+        _status.value = _status.value.copy(
+            cloudSaveState = state.name.lowercase(),
+            cloudSaveMessage = message
+        )
+    }
+    private val recall = PlayGamesRecall(activity) { state, message ->
+        _status.value = _status.value.copy(
+            recallState = state.name.lowercase(),
+            recallMessage = message
+        )
+    }
 
     fun initialize() {
         if (!BuildConfig.PLAY_GAMES_CONFIGURED) {
@@ -49,6 +70,8 @@ class PlayGamesManager(private val activity: Activity) {
                 if (authenticated) {
                     loadPlayerName()
                     flushPendingMiniGameResults()
+                    cloudSave.onAuthenticated()
+                    recall.onAuthenticated()
                 }
             }
     }
@@ -75,9 +98,35 @@ class PlayGamesManager(private val activity: Activity) {
 
     fun syncMilestones(state: GameState) {
         if (!canUsePlayGames()) return
+        cloudSave.observe(state)
+        AnalyticsHelper.setFishLevel(state.fishState.level)
         PlayGamesMilestones.achievementsFor(state).forEach { achievement ->
             unlock(achievementId(achievement))
         }
+    }
+
+    fun saveCloudNow() {
+        if (canUsePlayGames()) cloudSave.saveNow()
+    }
+
+    fun restoreCloudNow() {
+        if (canUsePlayGames()) cloudSave.restoreNow()
+    }
+
+    fun showCloudSaves() {
+        if (canUsePlayGames()) cloudSave.showSelector()
+    }
+
+    fun handleActivityResult(requestCode: Int, resultCode: Int, data: android.content.Intent?): Boolean =
+        cloudSave.handleActivityResult(requestCode, resultCode, data)
+
+    fun flushCloudSave() {
+        if (canUsePlayGames()) cloudSave.flush()
+    }
+
+    fun close() {
+        cloudSave.close()
+        recall.close()
     }
 
     fun recordMiniGame(result: MiniGameResult) {
@@ -134,6 +183,7 @@ class PlayGamesManager(private val activity: Activity) {
         PlayGames.getPlayersClient(activity).currentPlayer
             .addOnSuccessListener { player ->
                 _status.value = _status.value.copy(playerName = player.displayName)
+                AnalyticsHelper.setPlayGamesPlayer(player.playerId)
             }
             .addOnFailureListener(::recordFailure)
     }

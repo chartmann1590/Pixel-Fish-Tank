@@ -1,6 +1,6 @@
 # Privacy Policy for Pixel Fish Tank
 
-**Last Updated**: January 3, 2025
+**Last Updated**: July 16, 2026
 
 ## Introduction
 
@@ -9,7 +9,7 @@ Pixel Fish Tank ("we", "our", or "us") is committed to protecting your privacy. 
 ## Information We Collect
 
 ### Data Stored Locally
-Pixel Fish Tank is designed to be **offline-first**. All game data is stored locally on your device, including:
+Pixel Fish Tank is designed to be **offline-first**. Game data is always stored locally on your device, including:
 - Fish statistics (hunger, cleanliness, happiness, level, XP)
 - Coins and inventory
 - Tank decorations and layout
@@ -17,7 +17,11 @@ Pixel Fish Tank is designed to be **offline-first**. All game data is stored loc
 - Mini-game high scores
 - Notification and reminder settings
 
-**We do not collect or transmit this data to our servers.**
+When you connect Google Play Games, the App also synchronizes a portable copy of this progress to Google Play Games Saved Games so it can be restored on your other devices. Saved-game data does not include purchase-history records.
+
+### Google Play Games Services
+
+If you use Google Play Games, Google processes your Play Games profile identifier, achievements, leaderboard scores, and cloud-saved game progress. The App uses Play Games Recall to associate your Play Games profile with a pseudonymous Firebase account identifier. This allows the same in-game identity to be recovered after reinstalling the App. Recall tokens are generated randomly and do not contain your name, email address, or game progress.
 
 ### Automatically Collected Information
 The App uses Firebase services which may collect certain information automatically:
@@ -33,7 +37,7 @@ The App uses Firebase services which may collect certain information automatical
 - Settings changes
 - Backup/restore operations
 
-**Note**: All analytics events are anonymous and do not contain personal information. We use this data to understand how players interact with the game and improve the user experience.
+**Note**: Analytics uses a pseudonymous Play Games player identifier when you are connected. Events do not include your real name or email address. We use this data to understand how players interact with the game and improve the user experience.
 
 #### Firebase Crashlytics
 - Crash reports and stack traces
@@ -52,14 +56,15 @@ The App requests the following permissions:
 
 ## How We Use Information
 
-### Local Data
-All game progress and settings are stored locally on your device and are not shared with us or any third parties.
+### Game Progress
+Game progress and settings are stored locally. If you connect Google Play Games, progress is also sent to Google Play Games Saved Games for cross-device backup and restoration.
 
 ### Firebase Services
 We use Firebase services for:
 - **Analytics**: To understand how users interact with the App and improve user experience
 - **Crashlytics**: To identify and fix bugs and crashes
 - **Cloud Messaging**: To send optional reminder notifications (if enabled by user)
+- **Authentication and Recall**: To create a pseudonymous in-game account and recover it through your Play Games profile
 
 ## Data Sharing
 
@@ -67,11 +72,13 @@ We **do not sell, trade, or rent** your personal information to third parties.
 
 Firebase services are provided by Google and are subject to [Google's Privacy Policy](https://policies.google.com/privacy). Data collected by Firebase is used in accordance with Google's privacy practices.
 
+Google Play Games Services is also provided by Google and is subject to Google's Privacy Policy and the Play Games profile and privacy controls available in your Google settings.
+
 ## Data Security
 
-- All game data is stored locally on your device
-- Firebase services use industry-standard encryption
-- We do not have access to your local game data
+- Local game data remains on your device unless you connect Google Play Games
+- Cloud saves, Recall calls, and Firebase services use encrypted network connections
+- Recall tokens are stored as one-way hashes by the backend
 
 ## Children's Privacy
 
@@ -84,6 +91,9 @@ You have full control over your local game data:
 - You can uninstall the App at any time, which will delete all local data
 - You can clear app data through your device settings
 
+### Cloud Data
+You can manage or delete Play Games data through your Google Play Games profile settings. You may also contact us to request deletion of a pseudonymous Recall account link.
+
 ### Analytics and Crash Reporting
 You can opt out of Firebase Analytics by disabling it in your device settings or by not using the App.
 
@@ -95,13 +105,15 @@ You can disable notifications at any time through:
 ## Data Retention
 
 - **Local Game Data**: Retained on your device until you uninstall the App or clear app data
+- **Play Games Saved Games**: Retained until replaced or deleted through Google Play Games
+- **Recall account link**: Retained while the Play Games account link remains active
 - **Firebase Analytics Data**: Retained according to Google's data retention policies (typically 14 months)
 - **Crash Reports**: Retained by Firebase for analysis and bug fixing
 
 ## Third-Party Services
 
 The App uses the following third-party services:
-- **Google Firebase**: Analytics, Crashlytics, Cloud Messaging
+- **Google Firebase**: Analytics, Authentication, Cloud Functions, Crashlytics, Cloud Messaging
   - Privacy Policy: https://policies.google.com/privacy
   - Terms of Service: https://firebase.google.com/terms
 
@@ -136,6 +148,4 @@ If you have any questions about this Privacy Policy, please contact us:
 By using Pixel Fish Tank, you consent to this Privacy Policy and agree to its terms.
 
 ---
-
-**Note**: This is a template privacy policy. Please review and customize it according to your specific needs and legal requirements. Consider consulting with a legal professional to ensure compliance with applicable privacy laws (GDPR, CCPA, COPPA, etc.).
 
