@@ -1,0 +1,12 @@
+resource_variable,play_games_id,name,description,type,steps,initial_state,points,icon
+PGS_ACH_FIRST_FEED,CgkIgNzj3ZkMEAIQAA,First Feeding,Feed your fish for the first time.,Standard,,Revealed,5,first-feeding.png
+PGS_ACH_SPARKLING_CLEAN,CgkIgNzj3ZkMEAIQAQ,Sparkling Clean,Clean your fish tank for the first time.,Standard,,Revealed,5,sparkling-clean.png
+PGS_ACH_FIRST_MINIGAME,CgkIgNzj3ZkMEAIQAg,Game On,Finish your first mini-game.,Standard,,Revealed,5,game-on.png
+PGS_ACH_HIGH_SCORE,CgkIgNzj3ZkMEAIQAw,Personal Best,Set a new mini-game high score.,Standard,,Revealed,10,personal-best.png
+PGS_ACH_LEVEL_5,CgkIgNzj3ZkMEAIQBA,Growing Up,Reach fish level 5.,Standard,,Revealed,10,growing-up.png
+PGS_ACH_LEVEL_10,CgkIgNzj3ZkMEAIQBQ,Tank Legend,Reach fish level 10.,Standard,,Revealed,25,tank-legend.png
+PGS_ACH_STREAK_3,CgkIgNzj3ZkMEAIQBg,Three Day Splash,Maintain a three-day care streak.,Standard,,Revealed,10,three-day-splash.png
+PGS_ACH_STREAK_7,CgkIgNzj3ZkMEAIQBw,Weekly Caretaker,Maintain a seven-day care streak.,Standard,,Revealed,25,weekly-caretaker.png
+PGS_ACH_DECORATOR,CgkIgNzj3ZkMEAIQCA,Interior Designer,Place five decorations in your tank.,Standard,,Revealed,10,interior-designer.png
+PGS_ACH_COLLECTOR,CgkIgNzj3ZkMEAIQCQ,Collector,Collect five items.,Standard,,Revealed,10,collector.png
+PGS_ACH_MINIGAME_VETERAN,CgkIgNzj3ZkMEAIQCg,Mini-game Veteran,Finish 25 mini-games.,Incremental,25,Revealed,25,minigame-veteran.png
