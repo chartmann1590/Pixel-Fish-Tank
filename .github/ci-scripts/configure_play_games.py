@@ -2,6 +2,7 @@
 
 import json
 import os
+import time
 from pathlib import Path
 
 from google.oauth2 import service_account
@@ -56,8 +57,31 @@ def main() -> None:
     service_account_info = json.loads(os.environ["GOOGLE_PLAY_SERVICE_ACCOUNT_JSON"])
     credentials = service_account.Credentials.from_service_account_info(
         service_account_info,
-        scopes=["https://www.googleapis.com/auth/androidpublisher"],
+        scopes=[
+            "https://www.googleapis.com/auth/androidpublisher",
+            "https://www.googleapis.com/auth/cloud-platform",
+        ],
     )
+
+    # New Play Games projects do not always have the configuration API enabled.
+    # Enable it idempotently before attempting to create resources.
+    service_usage = build("serviceusage", "v1", credentials=credentials, cache_discovery=False)
+    operation = service_usage.services().enable(
+        name=f"projects/{application_id}/services/gamesconfiguration.googleapis.com"
+    ).execute()
+    operation_name = operation.get("name")
+    for _ in range(12):
+        if not operation_name:
+            break
+        current = service_usage.operations().get(name=operation_name).execute()
+        if current.get("done"):
+            if "error" in current:
+                raise RuntimeError(f"Could not enable Play Games configuration API: {current['error']}")
+            break
+        time.sleep(5)
+    else:
+        raise TimeoutError("Timed out enabling the Play Games configuration API")
+
     service = build("gamesConfiguration", "v1configuration", credentials=credentials, cache_discovery=False)
 
     achievement_api = service.achievementConfigurations()
