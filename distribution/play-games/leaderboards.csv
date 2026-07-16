@@ -1,0 +1,7 @@
+resource_variable,play_games_id,name,score_order,minimum_score,maximum_score,format,decimal_places,icon
+PGS_LB_BUBBLE_POP,CgkIgNzj3ZkMEAIQCw,Bubble Pop High Scores,Larger is better,0,999999999,Numeric,0,bubble-pop.png
+PGS_LB_TIMING_BAR,CgkIgNzj3ZkMEAIQDA,Timing Bar High Scores,Larger is better,0,999999999,Numeric,0,timing-bar.png
+PGS_LB_CLEANUP_RUSH,CgkIgNzj3ZkMEAIQDQ,Cleanup Rush High Scores,Larger is better,0,999999999,Numeric,0,cleanup-rush.png
+PGS_LB_FOOD_DROP,CgkIgNzj3ZkMEAIQDg,Food Drop High Scores,Larger is better,0,999999999,Numeric,0,food-drop.png
+PGS_LB_MEMORY_SHELLS,CgkIgNzj3ZkMEAIQDw,Memory Shells High Scores,Larger is better,0,999999999,Numeric,0,memory-shells.png
+PGS_LB_FISH_FOLLOW,CgkIgNzj3ZkMEAIQEA,Fish Follow High Scores,Larger is better,0,999999999,Numeric,0,fish-follow.png

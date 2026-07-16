@@ -1,0 +1,11 @@
+Display name: Pixel Fish Tank
+Default language: English (United States) - en-US
+Category: Casual
+Description: Raise a cheerful pixel fish in a cozy virtual aquarium. Feed and clean your pet, decorate its tank, complete daily care streaks, and play six quick mini-games. Sign in with Google Play Games to unlock achievements and compete on leaderboards while your fish grows from a tiny companion into a tank legend.
+Saved games: No
+Theme color: #18BCE4
+Icon: icon-512.png
+Banner: banner-1024x500.png
+Android package: com.charles.virtualpet.fishtank
+Play Games project ID: 419224415744
+Release certificate SHA-1: BD:7C:17:03:21:7C:57:CE:7A:51:E5:EA:0E:67:25:2B:F2:0B:BB:72
