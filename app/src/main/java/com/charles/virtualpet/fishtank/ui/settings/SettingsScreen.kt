@@ -74,6 +74,7 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import com.charles.virtualpet.fishtank.ui.components.AdMobBanner
+import com.charles.virtualpet.fishtank.playgames.PlayGamesManager
 
 @Composable
 private fun TimePickerDialog(
@@ -108,6 +109,7 @@ fun SettingsScreen(
     repository: GameStateRepository,
     sfxManager: SfxManager?,
     bgMusicManager: BackgroundMusicManager?,
+    playGamesManager: PlayGamesManager,
     onBack: () -> Unit,
     onReplayTutorial: () -> Unit = {},
     modifier: Modifier = Modifier
@@ -255,6 +257,11 @@ fun SettingsScreen(
                 modifier = Modifier.padding(bottom = 20.dp)
             )
 
+            PlayGamesCard(
+                playGamesManager = playGamesManager,
+                modifier = Modifier.padding(bottom = 20.dp)
+            )
+
             // Tutorial Card
             TutorialCard(
                 onReplayTutorial = onReplayTutorial,
@@ -305,6 +312,65 @@ fun SettingsScreen(
         hostState = snackbarHostState,
         modifier = Modifier.padding(16.dp)
     )
+}
+
+@Composable
+private fun PlayGamesCard(
+    playGamesManager: PlayGamesManager,
+    modifier: Modifier = Modifier
+) {
+    val status by playGamesManager.status.collectAsStateWithLifecycle()
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        shape = RoundedCornerShape(20.dp)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(
+                text = "Google Play Games",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = when {
+                    !status.isConfigured -> "Play Games is available in the Play Store build."
+                    status.isAuthenticated -> "Connected as ${status.playerName ?: "Play Games player"}"
+                    else -> "Connect to sync achievements and leaderboard scores."
+                },
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (status.isConfigured && !status.isAuthenticated) {
+                Button(
+                    onClick = playGamesManager::signIn,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Connect Play Games")
+                }
+            } else if (status.isAuthenticated) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Button(
+                        onClick = playGamesManager::showAchievements,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Achievements")
+                    }
+                    Button(
+                        onClick = playGamesManager::showLeaderboards,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Leaderboards")
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable

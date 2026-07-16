@@ -37,6 +37,45 @@ android {
         buildConfigField("String", "ADMOB_INTERSTITIAL_AD_UNIT_ID", "\"$admobInterstitialAdUnitId\"")
         
         manifestPlaceholders["ADMOB_APP_ID"] = admobAppId
+
+        // Google Play Games Services v2. Values are injected by the production
+        // workflow after the corresponding resources are created in Play Console.
+        fun playGamesValue(name: String, default: String = ""): String =
+            System.getenv(name)
+                ?: (project.findProperty(name) as? String)
+                ?: default
+
+        val playGamesAppId = playGamesValue("PGS_APP_ID", "0")
+        resValue("string", "game_services_project_id", playGamesAppId)
+
+        val playGamesResourceNames = listOf(
+            "PGS_ACH_FIRST_FEED",
+            "PGS_ACH_SPARKLING_CLEAN",
+            "PGS_ACH_FIRST_MINIGAME",
+            "PGS_ACH_HIGH_SCORE",
+            "PGS_ACH_LEVEL_5",
+            "PGS_ACH_LEVEL_10",
+            "PGS_ACH_STREAK_3",
+            "PGS_ACH_STREAK_7",
+            "PGS_ACH_DECORATOR",
+            "PGS_ACH_COLLECTOR",
+            "PGS_ACH_MINIGAME_VETERAN",
+            "PGS_LB_BUBBLE_POP",
+            "PGS_LB_TIMING_BAR",
+            "PGS_LB_CLEANUP_RUSH",
+            "PGS_LB_FOOD_DROP",
+            "PGS_LB_MEMORY_SHELLS",
+            "PGS_LB_FISH_FOLLOW"
+        )
+        val playGamesResourceValues = playGamesResourceNames.associateWith(::playGamesValue)
+        playGamesResourceNames.forEach { name ->
+            buildConfigField("String", name, "\"${playGamesValue(name)}\"")
+        }
+        buildConfigField(
+            "boolean",
+            "PLAY_GAMES_CONFIGURED",
+            (playGamesAppId != "0" && playGamesResourceValues.values.all(String::isNotBlank)).toString()
+        )
         
         // GitHub Feedback Reporter configuration from local.properties
         val localProperties = Properties()
@@ -159,6 +198,9 @@ dependencies {
 
     // AdMob
     implementation("com.google.android.gms:play-services-ads:22.6.0")
+
+    // Google Play Games Services v2 (required for Sidekick achievements)
+    implementation("com.google.android.gms:play-services-games-v2:21.0.0")
 
     // GitHub Feedback Reporter - Networking
     implementation("com.squareup.retrofit2:retrofit:2.9.0")

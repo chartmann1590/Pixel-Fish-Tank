@@ -29,6 +29,7 @@ import com.charles.virtualpet.fishtank.ui.store.DecorationStoreScreen
 import com.charles.virtualpet.fishtank.ui.tank.TankScreen
 import com.charles.virtualpet.fishtank.ui.tutorial.TutorialOnboardingScreen
 import com.charles.virtualpet.fishtank.analytics.AnalyticsHelper
+import com.charles.virtualpet.fishtank.playgames.PlayGamesManager
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -58,7 +59,8 @@ fun NavGraph(
     storeRepository: com.charles.virtualpet.fishtank.data.FirebaseStoreRepository?,
     sfxManager: SfxManager?,
     bgMusicManager: BackgroundMusicManager?,
-    interstitialAdManager: InterstitialAdManager?
+    interstitialAdManager: InterstitialAdManager?,
+    playGamesManager: PlayGamesManager
 ) {
     val gameState by viewModel.gameState.collectAsStateWithLifecycle()
     val hasCompletedTutorial = gameState.settings.hasCompletedTutorial
@@ -158,6 +160,7 @@ fun NavGraph(
                 highScoreStore = highScoreStore,
                 sfxManager = sfxManager,
                 onFinish = { result ->
+                    playGamesManager.recordMiniGame(result)
                     // Log analytics
                     AnalyticsHelper.logMiniGameComplete(
                         gameType = result.type.name,
@@ -192,6 +195,7 @@ fun NavGraph(
             TimingBarScreen(
                 highScoreStore = highScoreStore,
                 onFinish = { result ->
+                    playGamesManager.recordMiniGame(result)
                     // Log analytics
                     AnalyticsHelper.logMiniGameComplete(
                         gameType = result.type.name,
@@ -227,6 +231,7 @@ fun NavGraph(
                 highScoreStore = highScoreStore,
                 sfxManager = sfxManager,
                 onFinish = { result ->
+                    playGamesManager.recordMiniGame(result)
                     // Log analytics
                     AnalyticsHelper.logMiniGameComplete(
                         gameType = result.type.name,
@@ -261,6 +266,7 @@ fun NavGraph(
             FoodDropScreen(
                 highScoreStore = highScoreStore,
                 onFinish = { result ->
+                    playGamesManager.recordMiniGame(result)
                     // Log analytics
                     AnalyticsHelper.logMiniGameComplete(
                         gameType = result.type.name,
@@ -295,6 +301,7 @@ fun NavGraph(
             MemoryShellsScreen(
                 highScoreStore = highScoreStore,
                 onFinish = { result ->
+                    playGamesManager.recordMiniGame(result)
                     // Log analytics
                     AnalyticsHelper.logMiniGameComplete(
                         gameType = result.type.name,
@@ -329,6 +336,7 @@ fun NavGraph(
             FishFollowScreen(
                 highScoreStore = highScoreStore,
                 onFinish = { result ->
+                    playGamesManager.recordMiniGame(result)
                     // Log analytics
                     AnalyticsHelper.logMiniGameComplete(
                         gameType = result.type.name,
@@ -386,6 +394,7 @@ fun NavGraph(
                 repository = repository,
                 sfxManager = sfxManager,
                 bgMusicManager = bgMusicManager,
+                playGamesManager = playGamesManager,
                 onBack = {
                     navController.popBackStack()
                 },

@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.FirebaseApp
 import com.google.firebase.crashlytics.FirebaseCrashlytics
@@ -40,6 +41,7 @@ import com.charles.virtualpet.fishtank.notifications.NotificationChannels
 import com.charles.virtualpet.fishtank.notifications.NotificationPrefs
 import com.charles.virtualpet.fishtank.notifications.PersistentNotificationManager
 import com.charles.virtualpet.fishtank.share.ScreenshotFileStore
+import com.charles.virtualpet.fishtank.playgames.PlayGamesManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -64,6 +66,8 @@ class MainActivity : ComponentActivity() {
             context = this
         )
     }
+
+    private val playGamesManager by lazy { PlayGamesManager(this) }
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,6 +83,10 @@ class MainActivity : ComponentActivity() {
         // Initialize Analytics
         com.charles.virtualpet.fishtank.analytics.AnalyticsHelper.initialize(this)
         com.charles.virtualpet.fishtank.analytics.AnalyticsHelper.logAppOpen()
+
+        // PGS v2 performs automatic platform authentication at launch. The
+        // manager remains a no-op for local builds without Play Console IDs.
+        playGamesManager.initialize()
         
         // Initialize AdMob
         MobileAds.initialize(this) {}
@@ -122,6 +130,12 @@ class MainActivity : ComponentActivity() {
                 )
                 val repository = GameStateRepository(this@MainActivity)
                 val navController = rememberNavController()
+                val gameState by viewModel.gameState.collectAsStateWithLifecycle()
+                val playGamesStatus by playGamesManager.status.collectAsStateWithLifecycle()
+
+                LaunchedEffect(gameState, playGamesStatus.isAuthenticated) {
+                    playGamesManager.syncMilestones(gameState)
+                }
 
                 LaunchedEffect(pendingNotificationAction) {
                     when (pendingNotificationAction) {
@@ -140,7 +154,8 @@ class MainActivity : ComponentActivity() {
                     storeRepository = storeRepository,
                     sfxManager = sfxManager,
                     bgMusicManager = bgMusicManager,
-                    interstitialAdManager = interstitialAdManager
+                    interstitialAdManager = interstitialAdManager,
+                    playGamesManager = playGamesManager
                 )
             }
         }
@@ -172,6 +187,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         bgMusicManager?.resume()
+        playGamesManager.refreshAuthentication()
         // Track app open time for notification decision engine
         coroutineScope.launch {
             notificationPrefs.updateLastAppOpenEpoch(System.currentTimeMillis())
