@@ -11,12 +11,12 @@ plugins {
 
 android {
     namespace = "com.charles.virtualpet.fishtank"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.charles.virtualpet.fishtank"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
         versionCode = (System.getenv("ANDROID_VERSION_CODE")?.toIntOrNull() ?: 3)
         versionName = (System.getenv("ANDROID_VERSION_NAME") ?: "1.2.0")
 
