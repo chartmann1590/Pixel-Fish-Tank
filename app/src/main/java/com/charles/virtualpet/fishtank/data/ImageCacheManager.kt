@@ -43,8 +43,23 @@ class ImageCacheManager(private val context: Context) {
             FileOutputStream(cachedFile).use { it.write(bytes) }
             
             cachedFile.absolutePath
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // Never swallow coroutine cancellation — rethrow so the calling scope
+            // tears down correctly. Recording this was the source of the recurring
+            // JobCancellationException noise. (Crashlytics issue #7)
+            throw e
         } catch (e: Exception) {
-            FirebaseCrashlytics.getInstance().recordException(e)
+            // Transient network/DNS failures are environmental, not actionable bugs.
+            // GaiException/UnknownHostException here was the recurring EAI_NODATA
+            // noise. (Crashlytics issue #6)
+            val isTransientNetwork = e is java.net.UnknownHostException ||
+                e is java.net.ConnectException ||
+                e is java.net.SocketTimeoutException ||
+                e is java.net.NoRouteToHostException ||
+                e::class.simpleName == "GaiException"
+            if (!isTransientNetwork) {
+                FirebaseCrashlytics.getInstance().recordException(e)
+            }
             null
         }
     }
