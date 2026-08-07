@@ -1,5 +1,7 @@
 package com.charles.virtualpet.fishtank.ui.tank
 
+import android.app.Activity
+import com.charles.virtualpet.fishtank.review.ReviewPrompter
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.LinearEasing
@@ -972,6 +974,9 @@ fun TankScreen(
                 xpForNextLevel = state.xpForNextLevel,
                 onDismiss = {
                     viewModel.dismissLevelUp()
+                    (context as? Activity)?.let { activity ->
+                        coroutineScope.launch { ReviewPrompter.maybeRequestReview(activity) }
+                    }
                 }
             )
         }

@@ -204,6 +204,7 @@ dependencies {
 
     // AdMob
     implementation("com.google.android.gms:play-services-ads:22.6.0")
+    implementation("com.google.android.play:review-ktx:2.0.2")
 
     // Google Play Games Services v2 (required for Sidekick achievements)
     implementation("com.google.android.gms:play-services-games-v2:21.0.0")
