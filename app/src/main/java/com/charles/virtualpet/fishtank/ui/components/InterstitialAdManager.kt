@@ -15,10 +15,12 @@ class InterstitialAdManager(
 ) {
     private var interstitialAd: InterstitialAd? = null
     private var onAdDismissedCallback: (() -> Unit)? = null
+    private var lastShownAtMs: Long = 0L
     private val adUnitId = BuildConfig.ADMOB_INTERSTITIAL_AD_UNIT_ID
-    
+
     companion object {
         private const val TAG = "InterstitialAd"
+        private const val MIN_INTERVAL_MS = 60_000L
     }
     
     fun loadAd() {
@@ -75,8 +77,15 @@ class InterstitialAdManager(
     }
     
     fun showAd(onDismissed: () -> Unit = {}) {
+        val sinceLastShow = System.currentTimeMillis() - lastShownAtMs
+        if (sinceLastShow < MIN_INTERVAL_MS) {
+            Log.d(TAG, "Skipping ad, shown ${sinceLastShow}ms ago (min interval ${MIN_INTERVAL_MS}ms)")
+            onDismissed()
+            return
+        }
         interstitialAd?.let { ad ->
             onAdDismissedCallback = onDismissed
+            lastShownAtMs = System.currentTimeMillis()
             ad.show(context as android.app.Activity)
         } ?: run {
             Log.w(TAG, "Ad not loaded, continuing without showing")
