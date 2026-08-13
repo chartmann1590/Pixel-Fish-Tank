@@ -100,18 +100,6 @@ jobs:
             echo "$name=${!name}" >> gradle.properties
           done
 
-      - name: Write local.properties (GitHub Feedback Reporter secrets)
-        env:
-          FEEDBACK_GITHUB_API_TOKEN: ${{ secrets.FEEDBACK_GITHUB_API_TOKEN }}
-          FEEDBACK_GITHUB_REPO_OWNER: ${{ secrets.FEEDBACK_GITHUB_REPO_OWNER }}
-          FEEDBACK_GITHUB_REPO_NAME: ${{ secrets.FEEDBACK_GITHUB_REPO_NAME }}
-        run: |
-          {
-            echo "github.api.token=$FEEDBACK_GITHUB_API_TOKEN"
-            echo "github.repo.owner=$FEEDBACK_GITHUB_REPO_OWNER"
-            echo "github.repo.name=$FEEDBACK_GITHUB_REPO_NAME"
-          } >> local.properties
-
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 

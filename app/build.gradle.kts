@@ -81,21 +81,6 @@ android {
             "PLAY_GAMES_RECALL_URL",
             "\"${playGamesValue("PLAY_GAMES_RECALL_URL", "https://pixel-fish-tank-recall.charles-h-hartmann1.workers.dev")}\""
         )
-        
-        // GitHub Feedback Reporter configuration from local.properties
-        val localProperties = Properties()
-        val localPropertiesFile = rootProject.file("local.properties")
-        if (localPropertiesFile.exists()) {
-            localPropertiesFile.inputStream().use { localProperties.load(it) }
-        }
-        val githubApiToken = localProperties.getProperty("github.api.token") ?: ""
-        val githubRepoOwner = localProperties.getProperty("github.repo.owner") ?: ""
-        val githubRepoName = localProperties.getProperty("github.repo.name") ?: ""
-        
-        buildConfigField("String", "GITHUB_API_TOKEN", "\"$githubApiToken\"")
-        buildConfigField("String", "GITHUB_REPO_OWNER", "\"$githubRepoOwner\"")
-        buildConfigField("String", "GITHUB_REPO_NAME", "\"$githubRepoName\"")
-        buildConfigField("String", "FEEDBACK_ASSETS_DIR", "\"feedback-assets\"")
     }
 
     // Load keystore properties

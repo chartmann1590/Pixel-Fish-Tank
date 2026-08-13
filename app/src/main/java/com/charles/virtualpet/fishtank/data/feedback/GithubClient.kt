@@ -2,7 +2,6 @@ package com.charles.virtualpet.fishtank.data.feedback
 
 import com.charles.virtualpet.fishtank.BuildConfig
 import kotlinx.serialization.json.Json
-import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -10,28 +9,21 @@ import retrofit2.Retrofit
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import java.util.concurrent.TimeUnit
 
+/**
+ * Talks to the cloudflare-worker/ feedback relay, not api.github.com directly. See
+ * cloudflare-worker/src/index.ts, which holds the GitHub token server-side as a Worker
+ * secret. Previously this embedded BuildConfig.GITHUB_API_TOKEN client-side as a Bearer
+ * header, which shipped a real repo-write PAT in every release build (extractable from
+ * the APK).
+ */
 object GithubClient {
 
-    private const val BASE_URL = "https://api.github.com/"
+    private const val BASE_URL = "https://pixel-fish-tank-github-feedback.charles-h-hartmann1.workers.dev/"
 
     private val json = Json {
         ignoreUnknownKeys = true
         isLenient = true
         encodeDefaults = true
-    }
-
-    private val authInterceptor = Interceptor { chain ->
-        val original = chain.request()
-        val builder = original.newBuilder()
-            .header("Accept", "application/vnd.github+json")
-            .header("X-GitHub-Api-Version", "2022-11-28")
-            .header("User-Agent", "Pixel-Fish-Tank-Android/1.0")
-
-        if (BuildConfig.GITHUB_API_TOKEN.isNotEmpty()) {
-            builder.header("Authorization", "Bearer ${BuildConfig.GITHUB_API_TOKEN}")
-        }
-
-        chain.proceed(builder.build())
     }
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
@@ -40,11 +32,9 @@ object GithubClient {
         } else {
             HttpLoggingInterceptor.Level.NONE
         }
-        redactHeader("Authorization")
     }
 
     private val okHttpClient = OkHttpClient.Builder()
-        .addInterceptor(authInterceptor)
         .addInterceptor(loggingInterceptor)
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
@@ -59,12 +49,5 @@ object GithubClient {
 
     val api: GithubApi = retrofit.create(GithubApi::class.java)
 
-    val isConfigured: Boolean
-        get() = BuildConfig.GITHUB_API_TOKEN.isNotEmpty() &&
-                BuildConfig.GITHUB_REPO_OWNER.isNotEmpty() &&
-                BuildConfig.GITHUB_REPO_NAME.isNotEmpty()
-
-    val owner: String get() = BuildConfig.GITHUB_REPO_OWNER
-    val repo: String get() = BuildConfig.GITHUB_REPO_NAME
-    val assetsDir: String get() = BuildConfig.FEEDBACK_ASSETS_DIR
+    val isConfigured: Boolean = true
 }

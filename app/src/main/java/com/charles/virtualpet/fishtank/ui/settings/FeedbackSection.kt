@@ -473,9 +473,6 @@ private suspend fun submitReport(
 ) {
     withContext(Dispatchers.IO) {
         val api = GithubClient.api
-        val owner = GithubClient.owner
-        val repoName = GithubClient.repo
-        val assetsDir = GithubClient.assetsDir
 
         var imageUrl: String? = null
         if (imageUri != null) {
@@ -485,10 +482,10 @@ private suspend fun submitReport(
                 val random = (1000..9999).random()
                 val filename = "issue-$timestamp-${random}.png"
                 val uploadRequest = UploadAssetRequest(
-                    message = "Upload screenshot for issue",
-                    content = base64Content
+                    filename = filename,
+                    contentBase64 = base64Content
                 )
-                val uploadResponse = api.uploadAsset(owner, repoName, assetsDir, filename, uploadRequest)
+                val uploadResponse = api.uploadAsset(uploadRequest)
                 if (uploadResponse.isSuccessful) {
                     imageUrl = uploadResponse.body()?.content?.downloadUrl
                 }
@@ -522,7 +519,7 @@ private suspend fun submitReport(
 
         val issueTitle = "[Feedback] $title"
         val request = CreateIssueRequest(title = issueTitle, body = body)
-        val response = api.createIssue(owner, repoName, request)
+        val response = api.createIssue(request)
 
         if (response.isSuccessful) {
             val issue = response.body()!!
@@ -574,10 +571,8 @@ fun IssueDetailDialog(
         try {
             withContext(Dispatchers.IO) {
                 val api = GithubClient.api
-                val owner = GithubClient.owner
-                val repoName = GithubClient.repo
 
-                val issueResponse = api.getIssue(owner, repoName, report.number)
+                val issueResponse = api.getIssue(report.number)
                 if (issueResponse.isSuccessful) {
                     issue = issueResponse.body()
                     val updatedReport = BugReport(
@@ -590,7 +585,7 @@ fun IssueDetailDialog(
                     repo.saveBugReport(updatedReport)
                 }
 
-                val commentsResponse = api.getComments(owner, repoName, report.number)
+                val commentsResponse = api.getComments(report.number)
                 if (commentsResponse.isSuccessful) {
                     comments = commentsResponse.body() ?: emptyList()
                 }
@@ -765,9 +760,6 @@ fun IssueDetailDialog(
                             try {
                                 withContext(Dispatchers.IO) {
                                     val api = GithubClient.api
-                                    val owner = GithubClient.owner
-                                    val repoName = GithubClient.repo
-                                    val assetsDir = GithubClient.assetsDir
 
                                     var imageUrl: String? = null
                                     replyImageUri?.let { uri ->
@@ -777,10 +769,10 @@ fun IssueDetailDialog(
                                             val random = (1000..9999).random()
                                             val filename = "comment-$timestamp-${random}.png"
                                             val uploadRequest = UploadAssetRequest(
-                                                message = "Upload comment attachment",
-                                                content = base64Content
+                                                filename = filename,
+                                                contentBase64 = base64Content
                                             )
-                                            val uploadResponse = api.uploadAsset(owner, repoName, assetsDir, filename, uploadRequest)
+                                            val uploadResponse = api.uploadAsset(uploadRequest)
                                             if (uploadResponse.isSuccessful) {
                                                 imageUrl = uploadResponse.body()?.content?.downloadUrl
                                             }
@@ -800,9 +792,9 @@ fun IssueDetailDialog(
                                     }
 
                                     val request = PostCommentRequest(body = body)
-                                    val response = api.postComment(owner, repoName, report.number, request)
+                                    val response = api.postComment(report.number, request)
                                     if (response.isSuccessful) {
-                                        val updatedComments = api.getComments(owner, repoName, report.number)
+                                        val updatedComments = api.getComments(report.number)
                                         if (updatedComments.isSuccessful) {
                                             withContext(Dispatchers.Main) {
                                                 comments = updatedComments.body() ?: emptyList()
@@ -838,9 +830,7 @@ fun IssueDetailDialog(
                     withContext(Dispatchers.IO) {
                         try {
                             val api = GithubClient.api
-                            val owner = GithubClient.owner
-                            val repoName = GithubClient.repo
-                            val issueResponse = api.getIssue(owner, repoName, report.number)
+                            val issueResponse = api.getIssue(report.number)
                             if (issueResponse.isSuccessful && issueResponse.body() != null) {
                                 val iss = issueResponse.body()!!
                                 val updated = BugReport(
@@ -852,7 +842,7 @@ fun IssueDetailDialog(
                                 )
                                 repo.saveBugReport(updated)
                             }
-                            val commentsResponse = api.getComments(owner, repoName, report.number)
+                            val commentsResponse = api.getComments(report.number)
                             if (commentsResponse.isSuccessful) {
                                 comments = commentsResponse.body() ?: emptyList()
                             }
