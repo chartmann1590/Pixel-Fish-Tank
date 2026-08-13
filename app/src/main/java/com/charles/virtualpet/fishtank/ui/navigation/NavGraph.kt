@@ -47,6 +47,7 @@ sealed class Screen(val route: String) {
     object DecorationStore : Screen("decoration_store")
     object DecorationPlacement : Screen("decoration_placement")
     object Settings : Screen("settings")
+    object MoreApps : Screen("more_apps")
     object Rewards : Screen("rewards")
     object FishSkins : Screen("fish_skins")
 }
@@ -400,10 +401,17 @@ fun NavGraph(
                 },
                 onReplayTutorial = {
                     navController.navigate(Screen.Tutorial.route)
+                },
+                onNavigateToMoreApps = {
+                    navController.navigate(Screen.MoreApps.route)
                 }
             )
         }
-        
+
+        composable(Screen.MoreApps.route) {
+            com.charles.virtualpet.fishtank.ui.moreapps.MoreAppsScreen(onBack = { navController.popBackStack() })
+        }
+
         composable(Screen.Rewards.route) {
             RewardsScreen(
                 viewModel = viewModel,

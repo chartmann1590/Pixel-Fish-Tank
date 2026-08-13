@@ -112,6 +112,7 @@ fun SettingsScreen(
     playGamesManager: PlayGamesManager,
     onBack: () -> Unit,
     onReplayTutorial: () -> Unit = {},
+    onNavigateToMoreApps: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val gameState by viewModel.gameState.collectAsStateWithLifecycle()
@@ -284,6 +285,12 @@ fun SettingsScreen(
 
             // About Card with gradient
             AboutCard(
+                modifier = Modifier.padding(bottom = 20.dp)
+            )
+
+            // More Apps Card with gradient
+            MoreAppsCard(
+                onClick = onNavigateToMoreApps,
                 modifier = Modifier.padding(bottom = 24.dp)
             )
 
@@ -1021,6 +1028,58 @@ private fun TutorialCard(
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MoreAppsCard(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Transparent
+        )
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(PastelPurple, PastelPink)
+                    ),
+                    shape = RoundedCornerShape(20.dp)
+                )
+                .padding(24.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "🎮",
+                    style = MaterialTheme.typography.displaySmall
+                )
+                Column {
+                    Text(
+                        text = "More Apps",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Text(
+                        text = "Check out our other privacy-first apps",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.95f)
                     )
                 }
             }
