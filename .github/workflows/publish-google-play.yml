@@ -162,6 +162,18 @@ jobs:
               echo "Bug fixes and performance improvements." > "$NOTES_FILE"
             fi
           fi
+          # Google Play rejects release notes longer than 500 characters (auto-generated notes ran to 2,720).
+          python3 - "$NOTES_FILE" <<'PY'
+          import sys
+          path = sys.argv[1]
+          text = open(path, encoding="utf-8").read().strip()
+          if len(text) > 500:
+              cut = text[:499]
+              if "\n" in cut:
+                  cut = cut.rsplit("\n", 1)[0]
+              text = cut.rstrip() + "…"
+          open(path, "w", encoding="utf-8").write(text + "\n")
+          PY
           echo "Release notes:"
           cat "$NOTES_FILE"
 
