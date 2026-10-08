@@ -117,6 +117,11 @@ jobs:
           echo "apk_path=$APK_PATH" >> "$GITHUB_OUTPUT"
           echo "aab_path=$AAB_PATH" >> "$GITHUB_OUTPUT"
 
+      - name: Check 16 KB page size support
+        run: |
+          unzip -l "${{ steps.outputs.outputs.apk_path }}" | grep '\.so$' || echo "No native libraries in the APK"
+          python3 scripts/check_16kb.py "${{ steps.outputs.outputs.apk_path }}"
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
