@@ -2,7 +2,7 @@ name: Build Release APK & AAB
 
 on:
   push:
-    branches: ["**"]
+    branches: ["**", "!amazon"]  # amazon branch builds run in amazon.yml only (Tab, Nov 7 2026)
 
 permissions:
   contents: read
