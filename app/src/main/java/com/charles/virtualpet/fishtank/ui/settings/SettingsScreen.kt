@@ -326,6 +326,7 @@ private fun PlayGamesCard(
     playGamesManager: PlayGamesManager,
     modifier: Modifier = Modifier
 ) {
+    if (com.charles.virtualpet.fishtank.BuildConfig.STORE == "amazon") return // no Google Play Games on Amazon/Fire
     val status by playGamesManager.status.collectAsStateWithLifecycle()
 
     Card(

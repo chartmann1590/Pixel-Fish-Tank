@@ -1,0 +1,113 @@
+name: Amazon Appstore build + emulator test
+# Amazon Appstore (Fire) build of this app: same code, built with -Pstore=amazon (no Google Play
+# links, no Play in-app review prompt). Run on an emulator without Google Play services (like Fire).
+# Branch builds only make a DRAFT release; nothing is uploaded to any store.
+on:
+  push:
+    branches: [amazon]
+  workflow_dispatch: {}
+permissions:
+  contents: write
+concurrency:
+  group: amazon-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  amazon:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '17'
+    - name: Set up Gradle cache
+      uses: gradle/actions/setup-gradle@v3
+    - name: Decode Firebase google-services.json
+      env:
+        GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+      run: "if [ -z \"$GOOGLE_SERVICES_JSON_BASE64\" ]; then\n  echo \"GOOGLE_SERVICES_JSON_BASE64 secret is not set\" >&2\n  exit 1\nfi\necho \"$GOOGLE_SERVICES_JSON_BASE64\" | base64 --decode > app/google-services.json\n"
+    - name: Decode signing keystore
+      env:
+        KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+      run: "if [ -z \"$KEYSTORE_BASE64\" ]; then\n  echo \"KEYSTORE_BASE64 secret is not set\" >&2\n  exit 1\nfi\necho \"$KEYSTORE_BASE64\" | base64 --decode > app/release.keystore\n"
+    - name: Write keystore.properties
+      env:
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      run: 'cat > keystore.properties <<EOF
+
+        storeFile=../app/release.keystore
+
+        storePassword=$KEYSTORE_PASSWORD
+
+        keyAlias=$KEY_ALIAS
+
+        keyPassword=$KEY_PASSWORD
+
+        EOF
+
+        '
+    - name: Write gradle.properties secrets (AdMob)
+      env:
+        ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
+        ADMOB_BANNER_AD_UNIT_ID: ${{ secrets.ADMOB_BANNER_AD_UNIT_ID }}
+        ADMOB_REWARDED_INTERSTITIAL_AD_UNIT_ID: ${{ secrets.ADMOB_REWARDED_INTERSTITIAL_AD_UNIT_ID }}
+        ADMOB_INTERSTITIAL_AD_UNIT_ID: ${{ secrets.ADMOB_INTERSTITIAL_AD_UNIT_ID }}
+      run: "{\n  echo \"ADMOB_APP_ID=$ADMOB_APP_ID\"\n  echo \"ADMOB_BANNER_AD_UNIT_ID=$ADMOB_BANNER_AD_UNIT_ID\"\n  echo \"ADMOB_REWARDED_INTERSTITIAL_AD_UNIT_ID=$ADMOB_REWARDED_INTERSTITIAL_AD_UNIT_ID\"\n  echo \"ADMOB_INTERSTITIAL_AD_UNIT_ID=$ADMOB_INTERSTITIAL_AD_UNIT_ID\"\n} >> gradle.properties\n"
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+    - name: Build amazon APKs (store=amazon)
+      env:
+        APP_VERSION_CODE: ${{ github.run_number }}
+      run: './gradlew assembleRelease -Pstore=amazon --stacktrace
+
+        mkdir -p amz-apk
+
+
+        cp "$(ls app/build/outputs/apk/release/*.apk | grep -v unsigned | head -1 || ls app/build/outputs/apk/release/*.apk | head -1)" amz-apk/PixelFishTank-amazon-release.apk
+
+        ls -la amz-apk
+
+        BT=$ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)
+
+        $BT/apksigner verify --print-certs amz-apk/PixelFishTank-amazon-release.apk | head -3 || true
+
+        $BT/aapt2 dump badging amz-apk/PixelFishTank-amazon-release.apk | head -3 || true
+
+        echo "--- Play Store URL strings left in the amazon release dex:"; unzip -p amz-apk/PixelFishTank-amazon-release.apk ''classes*.dex'' | strings | grep -E "play\.google\.com/store|market://" | head || true
+
+        '
+    - name: Enable KVM
+      run: 'echo ''KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"'' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+
+        sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+
+        '
+    - name: Emulator test (no Google Play services, like Fire)
+      uses: reactivecircus/android-emulator-runner@v2
+      with:
+        api-level: 30
+        target: default
+        arch: x86_64
+        ram-size: 3072M
+        disk-size: 4096M
+        emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+        disable-animations: true
+        script: bash .github/amazon/run-tests.sh
+    - name: Upload test results to Tab's private drop
+      if: always()
+      env:
+        DROP_KEY: ${{ secrets.DROP_KEY }}
+      run: bash .github/amazon/amazon-upload.sh /tmp/amz-out amz_PixelFishTank_r${{ github.run_number }}
+    - name: Draft release with the amazon APK (not published)
+      if: success()
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: amazon-${{ github.run_number }}
+        name: Amazon build ${{ github.run_number }} (${{ github.sha }})
+        draft: true
+        files: amz-apk/PixelFishTank-amazon-release.apk
