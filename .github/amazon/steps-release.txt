@@ -15,7 +15,7 @@ adclose
 shot 03-main
 swipeup
 shot 04-scrolled
-tap (?i)^settings$
+tap ^(⚙️|⚙)$
 wait 4
 adclose
 shot 05-settings
